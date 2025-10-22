@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   ChevronDownIcon,
@@ -11,7 +11,7 @@ import {
   VerifiedIcon,
 } from "../../../assets/icons";
 import { MenuItem, MenuPopup } from "../../../components/atoms";
-import { useMenu } from "../../../hooks";
+import { useInfiniteScroll, useMenu } from "../../../hooks";
 import { sdk } from "../../../sdk";
 import { PricingOption } from "../../../sdk/types";
 
@@ -327,26 +327,37 @@ const ProductList = () => {
     onClose: () => setOpenFilterId(null),
   });
 
+  // Use infinite scroll hook for better UX
+  useInfiniteScroll({
+    onLoadMore: () => {
+      // In a real implementation, this would fetch more products
+      console.log("Loading more products...");
+    },
+    hasMore: apiData.length > 0, // Only load more if we have initial data
+    threshold: 300, // Trigger when 300px from bottom
+    isLoading: loading, // Prevent multiple loads while fetching
+  });
+
+  const fetchApiData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      console.log("Fetching data from API...");
+      const data = await sdk.products.getProducts();
+      console.log("API Response:", data);
+      setApiData(data);
+    } catch (err: any) {
+      console.error("Failed to fetch API data:", err);
+      setError(err.message || "Failed to fetch data");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Fetch data from API on component mount
   useEffect(() => {
-    const fetchApiData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        console.log("Fetching data from API...");
-        const data = await sdk.products.getProducts();
-        console.log("API Response:", data);
-        setApiData(data);
-      } catch (err: any) {
-        console.error("Failed to fetch API data:", err);
-        setError(err.message || "Failed to fetch data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchApiData();
-  }, []);
+  }, [fetchApiData]);
 
   const toggleFilter = (filterId: string) => {
     setOpenFilterId(openFilterId === filterId ? null : filterId);
