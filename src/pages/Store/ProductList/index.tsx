@@ -1,16 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
+import { sdk } from "../../../sdk";
+import { PricingOption } from "../../../sdk/types";
 
-// Types
-interface Product {
-  id: string;
-  image: string;
-  username: string;
-  title: string;
-  price: number;
-  views: number;
-  likes: number;
-}
+// Utility function to display pricing option
+const getPricingOptionLabel = (option: PricingOption): string => {
+  switch (option) {
+    case PricingOption.FREE:
+      return "Free";
+    case PricingOption.PAID:
+      return "Paid";
+    case PricingOption.VIEW_ONLY:
+      return "View Only";
+    default:
+      return "Unknown";
+  }
+};
 
 interface FilterOption {
   label: string;
@@ -157,6 +162,31 @@ const ProductImageContainer = styled.div`
   overflow: hidden;
 `;
 
+const PricingBadge = styled.div<{ $pricingOption: PricingOption }>`
+  position: absolute;
+  top: ${({ theme }) => theme.spacing.sm};
+  left: ${({ theme }) => theme.spacing.sm};
+  background-color: ${({ $pricingOption }) => {
+    switch ($pricingOption) {
+      case PricingOption.FREE:
+        return "#4ade80"; // Green for free
+      case PricingOption.PAID:
+        return "#00D9FF"; // Cyan for paid
+      case PricingOption.VIEW_ONLY:
+        return "#fbbf24"; // Yellow for view only
+      default:
+        return "#808080"; // Gray for unknown
+    }
+  }};
+  color: ${({ theme }) => theme.colors.background.primary};
+  padding: ${({ theme }) => `${theme.spacing.xs} ${theme.spacing.sm}`};
+  border-radius: 12px;
+  font-size: ${({ theme }) => theme.fontSizes.xs};
+  font-weight: ${({ theme }) => theme.fontWeights.semibold};
+  text-transform: uppercase;
+  z-index: 2;
+`;
+
 const ProductImage = styled.img`
   position: absolute;
   top: 0;
@@ -294,106 +324,29 @@ const MenuItem = styled.label`
 `;
 
 // Component
-interface ProductListProps {
-  products?: Product[];
-}
-
-const mockProducts: Product[] = [
-  {
-    id: "1",
-    image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400",
-    username: "fatéme_shamloo",
-    title: "Monster Slayer Jacket",
-    price: 12.0,
-    views: 181,
-    likes: 58,
-  },
-  {
-    id: "2",
-    image: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400",
-    username: "fabform3d",
-    title: "Men Jacket",
-    price: 7.0,
-    views: 138,
-    likes: 21,
-  },
-  {
-    id: "3",
-    image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=400",
-    username: "3dstitch",
-    title: "Bill Base-ball Hat",
-    price: 5.0,
-    views: 113,
-    likes: 30,
-  },
-  {
-    id: "4",
-    image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400",
-    username: "3dstitch",
-    title: "Women's Jacket",
-    price: 8.0,
-    views: 110,
-    likes: 25,
-  },
-  {
-    id: "5",
-    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400",
-    username: "heela.3dstudio",
-    title: "VINTAGE BACKPACK",
-    price: 15.0,
-    views: 83,
-    likes: 41,
-  },
-  {
-    id: "6",
-    image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400",
-    username: "clolover",
-    title: "Pleated Grace Dress",
-    price: 5.0,
-    views: 83,
-    likes: 35,
-  },
-];
-
 const filters: Filter[] = [
   {
     id: "curators-pick",
     label: "Curator's Pick",
     type: "checkbox",
     icon: "verified",
-    options: [
-      { label: "Featured", value: "featured" },
-      { label: "Trending", value: "trending" },
-      { label: "Top Rated", value: "top-rated" },
-    ],
   },
   {
     id: "following",
     label: "Following",
     type: "checkbox",
     icon: "users",
-    options: [{ label: "Show Following Only", value: "following" }],
   },
   {
     id: "file-type",
     label: "Fbx / Gltf",
     type: "checkbox",
     icon: "file",
-    options: [
-      { label: "FBX", value: "fbx" },
-      { label: "GLTF", value: "gltf" },
-      { label: "OBJ", value: "obj" },
-      { label: "USD", value: "usd" },
-    ],
   },
   {
     id: "official",
     label: "Official",
     type: "dropdown",
-    options: [
-      { label: "Official Store", value: "official" },
-      { label: "Verified Sellers", value: "verified" },
-    ],
   },
   {
     id: "price",
@@ -408,13 +361,37 @@ const filters: Filter[] = [
   },
 ];
 
-const ProductList = ({ products = mockProducts }: ProductListProps) => {
+const ProductList = () => {
   const [openFilterId, setOpenFilterId] = useState<string | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<
     Record<string, string[]>
   >({});
   const [sortBy, setSortBy] = useState("featured");
+  const [apiData, setApiData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Fetch data from API on component mount
+  useEffect(() => {
+    const fetchApiData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        console.log("Fetching data from API...");
+        const data = await sdk.products.getProducts();
+        console.log("API Response:", data);
+        setApiData(data);
+      } catch (err: any) {
+        console.error("Failed to fetch API data:", err);
+        setError(err.message || "Failed to fetch data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApiData();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -490,14 +467,16 @@ const ProductList = ({ products = mockProducts }: ProductListProps) => {
                 </svg>
               )}
               {filter.label}
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
+              {filter.options && (
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              )}
             </FilterButton>
 
             {filter.options && (
@@ -542,7 +521,17 @@ const ProductList = ({ products = mockProducts }: ProductListProps) => {
       </FiltersContainer>
 
       <HeaderRow>
-        <ItemCount>{products.length.toLocaleString()} Items</ItemCount>
+        <ItemCount>
+          {loading ? "Loading..." : `${apiData.length.toLocaleString()} Items`}
+          {error && (
+            <span style={{ color: "red", marginLeft: "10px" }}>({error})</span>
+          )}
+          {apiData.length > 0 && (
+            <span style={{ color: "#00D9FF", marginLeft: "10px" }}>
+              (API Data Loaded)
+            </span>
+          )}
+        </ItemCount>
         <SortDropdown
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
@@ -556,9 +545,12 @@ const ProductList = ({ products = mockProducts }: ProductListProps) => {
       </HeaderRow>
 
       <ProductGrid>
-        {products.map((product) => (
+        {apiData.map((product) => (
           <ProductCard key={product.id}>
             <ProductImageContainer>
+              <PricingBadge $pricingOption={product.pricingOption}>
+                {getPricingOptionLabel(product.pricingOption)}
+              </PricingBadge>
               <ProductImage src={product.image} alt={product.title} />
               <CartButton>
                 <svg
