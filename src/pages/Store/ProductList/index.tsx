@@ -1,5 +1,17 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
+import {
+  ChevronDownIcon,
+  EyeIcon,
+  FileIcon,
+  HeartIcon,
+  ResetIcon,
+  ShoppingCartIcon,
+  UsersIcon,
+  VerifiedIcon,
+} from "../../../assets/icons";
+import { MenuItem, MenuPopup } from "../../../components/atoms";
+import { useMenu } from "../../../hooks";
 import { sdk } from "../../../sdk";
 import { PricingOption } from "../../../sdk/types";
 
@@ -74,11 +86,6 @@ const FilterButton = styled.button<{ $active?: boolean }>`
 
   &:hover {
     background-color: ${({ theme }) => theme.colors.border.secondary};
-  }
-
-  svg {
-    width: 16px;
-    height: 16px;
   }
 `;
 
@@ -209,15 +216,10 @@ const CartButton = styled.button`
   align-items: center;
   justify-content: center;
   transition: background-color ${({ theme }) => theme.transitions.fast};
+  color: ${({ theme }) => theme.colors.text.primary};
 
   &:hover {
     background-color: rgba(0, 0, 0, 0.9);
-  }
-
-  svg {
-    width: 20px;
-    height: 20px;
-    color: ${({ theme }) => theme.colors.text.primary};
   }
 `;
 
@@ -264,63 +266,11 @@ const Stat = styled.div`
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.spacing.xs};
-
-  svg {
-    width: 14px;
-    height: 14px;
-  }
 `;
 
 // Filter Menu Popup
-const MenuPopup = styled.div<{ $isOpen: boolean }>`
-  position: absolute;
-  top: calc(100% + ${({ theme }) => theme.spacing.xs});
-  left: 0;
-  background-color: ${({ theme }) => theme.colors.background.secondary};
-  border: 1px solid ${({ theme }) => theme.colors.border.primary};
-  border-radius: 12px;
-  padding: ${({ theme }) => theme.spacing.md};
-  min-width: 200px;
-  z-index: ${({ theme }) => theme.zIndex.dropdown};
-  opacity: ${({ $isOpen }) => ($isOpen ? 1 : 0)};
-  visibility: ${({ $isOpen }) => ($isOpen ? "visible" : "hidden")};
-  transform: translateY(${({ $isOpen }) => ($isOpen ? "0" : "-10px")});
-  transition: all ${({ theme }) => theme.transitions.fast};
-  box-shadow: ${({ theme }) => theme.shadows.lg};
-`;
-
 const FilterWrapper = styled.div`
   position: relative;
-`;
-
-const MenuHeader = styled.div`
-  font-size: ${({ theme }) => theme.fontSizes.sm};
-  font-weight: ${({ theme }) => theme.fontWeights.semibold};
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin-bottom: ${({ theme }) => theme.spacing.sm};
-  padding-bottom: ${({ theme }) => theme.spacing.sm};
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border.primary};
-`;
-
-const MenuItem = styled.label`
-  display: flex;
-  align-items: center;
-  padding: ${({ theme }) => `${theme.spacing.sm} 0`};
-  cursor: pointer;
-  color: ${({ theme }) => theme.colors.text.primary};
-  font-size: ${({ theme }) => theme.fontSizes.sm};
-  font-family: ${({ theme }) => theme.fonts.primary};
-  transition: color ${({ theme }) => theme.transitions.fast};
-
-  &:hover {
-    color: ${({ theme }) => theme.colors.primary.cyan};
-  }
-
-  input {
-    margin-right: ${({ theme }) => theme.spacing.sm};
-    cursor: pointer;
-    accent-color: ${({ theme }) => theme.colors.primary.cyan};
-  }
 `;
 
 // Component
@@ -370,7 +320,12 @@ const ProductList = () => {
   const [apiData, setApiData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Use custom hook for menu click-outside functionality
+  const { getMenuRef } = useMenu({
+    isOpen: openFilterId !== null,
+    onClose: () => setOpenFilterId(null),
+  });
 
   // Fetch data from API on component mount
   useEffect(() => {
@@ -391,17 +346,6 @@ const ProductList = () => {
     };
 
     fetchApiData();
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setOpenFilterId(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const toggleFilter = (filterId: string) => {
@@ -431,57 +375,24 @@ const ProductList = () => {
         {filters.map((filter) => (
           <FilterWrapper
             key={filter.id}
-            ref={filter.id === openFilterId ? menuRef : null}
+            ref={getMenuRef(filter.id === openFilterId)}
           >
             <FilterButton
               $active={selectedFilters[filter.id]?.length > 0}
               onClick={() => toggleFilter(filter.id)}
             >
-              {filter.icon === "verified" && (
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              )}
-              {filter.icon === "users" && (
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-              )}
-              {filter.icon === "file" && (
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
-                  <polyline points="13 2 13 9 20 9" />
-                </svg>
-              )}
+              {filter.icon === "verified" && <VerifiedIcon size={16} />}
+              {filter.icon === "users" && <UsersIcon size={16} />}
+              {filter.icon === "file" && <FileIcon size={16} />}
               {filter.label}
-              {filter.options && (
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-              )}
+              {filter.options && <ChevronDownIcon size={16} />}
             </FilterButton>
 
             {filter.options && (
-              <MenuPopup $isOpen={openFilterId === filter.id}>
-                <MenuHeader>{filter.label}</MenuHeader>
+              <MenuPopup
+                isOpen={openFilterId === filter.id}
+                title={filter.label}
+              >
                 {filter.options.map((option) => (
                   <MenuItem key={option.value}>
                     <input
@@ -504,17 +415,7 @@ const ProductList = () => {
 
         {hasActiveFilters && (
           <ResetButton onClick={resetFilters}>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-              <path d="M21 3v5h-5" />
-              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-              <path d="M3 21v-5h5" />
-            </svg>
+            <ResetIcon size={16} />
             RESET
           </ResetButton>
         )}
@@ -553,16 +454,7 @@ const ProductList = () => {
               </PricingBadge>
               <ProductImage src={product.image} alt={product.title} />
               <CartButton>
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <circle cx="9" cy="21" r="1" />
-                  <circle cx="20" cy="21" r="1" />
-                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-                </svg>
+                <ShoppingCartIcon size={20} />
               </CartButton>
             </ProductImageContainer>
             <ProductInfo>
@@ -571,26 +463,11 @@ const ProductList = () => {
               <Price>$ {product.price.toFixed(2)}</Price>
               <Stats>
                 <Stat>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
+                  <EyeIcon size={14} />
                   {product.views}
                 </Stat>
                 <Stat>
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                  </svg>
+                  <HeartIcon size={14} />
                   {product.likes}
                 </Stat>
               </Stats>
