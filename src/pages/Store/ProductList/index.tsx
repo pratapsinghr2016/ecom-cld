@@ -408,9 +408,7 @@ const filters: Filter[] = [
   },
 ];
 
-export default function ProductList({
-  products = mockProducts,
-}: ProductListProps) {
+const ProductList = ({ products = mockProducts }: ProductListProps) => {
   const [openFilterId, setOpenFilterId] = useState<string | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<
     Record<string, string[]>
@@ -610,4 +608,6 @@ export default function ProductList({
       </ProductGrid>
     </Container>
   );
-}
+};
+
+export default ProductList;

@@ -1,20 +1,29 @@
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
-import CategoryNavigation from "./components/CategoryNavigation";
-import { Navbar } from "./components/Navbar";
-import ProductList from "./components/ProductList";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import ShellLayout from "./layouts/ShellLayout";
+import { AppRouter } from "./routes";
 import { GlobalStyles } from "./styles/GlobalStyles";
 import { theme } from "./styles/theme";
+
+// App content component that has access to auth context
+const AppContent = () => {
+  const { isAuthenticated } = useAuth();
+  return (
+    <ShellLayout>
+      <AppRouter isAuthenticated={isAuthenticated} />
+    </ShellLayout>
+  );
+};
 
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <GlobalStyles />
       <BrowserRouter>
-        <Navbar />
-        <CategoryNavigation />
-        <ProductList />
-        {/* Your routes and content here */}
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>
   );

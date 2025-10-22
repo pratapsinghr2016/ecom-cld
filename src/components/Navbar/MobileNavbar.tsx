@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
+import { BellIcon, CloseIcon, HamburgerIcon } from "../../assets/icons";
+import LogoImage from "../../assets/logo-sm-screen.png";
+import IconButton from "../atoms/IconButton";
+import Image from "../atoms/Image";
 
 // Types
 interface MobileMenuProps {
@@ -44,27 +48,6 @@ const NavActions = styled.div`
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.spacing.md};
-`;
-
-const IconButton = styled.button`
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: ${({ theme }) => theme.colors.text.primary};
-  border-radius: 4px;
-  transition: background-color ${({ theme }) => theme.transitions.fast};
-  position: relative;
-
-  &:hover {
-    background-color: ${({ theme }) => theme.colors.button.secondaryHover};
-  }
-
-  svg {
-    width: 24px;
-    height: 24px;
-  }
 `;
 
 const NotificationDot = styled.span<NotificationDotProps>`
@@ -172,46 +155,17 @@ export const MobileNavbar: React.FC = () => {
     <>
       <MobileNavContainer>
         <LogoLink to="/" onClick={closeMenu}>
-          <LogoSvg viewBox="0 0 40 40" fill="none">
-            <path d="M8 32V8L20 20L8 32Z" />
-            <path d="M20 20L32 8V32L20 20Z" />
-          </LogoSvg>
+          <Image src={LogoImage} alt="Logo" width={24} height={24} />
         </LogoLink>
 
         <NavActions>
           <IconButton aria-label="Notifications">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
+            <BellIcon size={24} />
             <NotificationDot count={1} />
           </IconButton>
 
           <IconButton onClick={toggleMenu} aria-label="Menu">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              {menuOpen ? (
-                <>
-                  <path d="M18 6L6 18" />
-                  <path d="M6 6l12 12" />
-                </>
-              ) : (
-                <>
-                  <path d="M3 12h18" />
-                  <path d="M3 6h18" />
-                  <path d="M3 18h18" />
-                </>
-              )}
-            </svg>
+            {menuOpen ? <CloseIcon size={24} /> : <HamburgerIcon size={24} />}
           </IconButton>
         </NavActions>
       </MobileNavContainer>

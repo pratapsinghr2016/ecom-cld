@@ -1,61 +1,10 @@
+import Logo from "@/assets/logo-bg-screen.svg";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
-
-// Extend DefaultTheme to include your theme structure
-declare module "styled-components" {
-  export interface DefaultTheme {
-    colors: {
-      background: {
-        primary: string;
-        secondary: string;
-        tertiary: string;
-      };
-      border: {
-        primary: string;
-      };
-      primary: {
-        cyan: string;
-      };
-      text: {
-        primary: string;
-        secondary: string;
-      };
-      button: {
-        secondaryHover: string;
-      };
-    };
-    spacing: {
-      xs: string;
-      sm: string;
-      md: string;
-      lg: string;
-      xl: string;
-    };
-    fontSizes: {
-      sm: string;
-      "2xl": string;
-    };
-    fontWeights: {
-      bold: string;
-      semibold: string;
-    };
-    transitions: {
-      fast: string;
-      normal: string;
-    };
-    breakpoints: {
-      desktop: string;
-    };
-    shadows: {
-      md: string;
-      lg: string;
-    };
-    zIndex: {
-      dropdown: number;
-    };
-  }
-}
+import { NineDotsIcon } from "../../assets/icons";
+import IconButton from "../atoms/IconButton";
+import Image from "../atoms/Image";
 
 // Types
 interface NavLinkProps {
@@ -90,19 +39,6 @@ const NavLeft = styled.div`
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.spacing.xl};
-`;
-
-const Logo = styled(Link)`
-  font-size: ${({ theme }) => theme.fontSizes["2xl"]};
-  font-weight: ${({ theme }) => theme.fontWeights.bold};
-  color: ${({ theme }) => theme.colors.primary.cyan};
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  transition: opacity ${({ theme }) => theme.transitions.fast};
-
-  &:hover {
-    opacity: 0.8;
-  }
 `;
 
 const NavMenu = styled.ul`
@@ -242,24 +178,12 @@ const SignUpButton = styled(Link)`
 `;
 
 const GridButton = styled.button`
-  width: 36px;
-  height: 36px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 3px;
   padding: 6px;
   border-radius: 4px;
   transition: background-color ${({ theme }) => theme.transitions.fast};
 
   &:hover {
     background-color: ${({ theme }) => theme.colors.button.secondaryHover};
-  }
-
-  span {
-    width: 100%;
-    height: 100%;
-    background-color: ${({ theme }) => theme.colors.text.primary};
-    border-radius: 1px;
   }
 `;
 
@@ -281,7 +205,7 @@ export const DesktopNavbar: React.FC = () => {
   return (
     <NavbarContainer>
       <NavLeft>
-        <Logo to="/">CONNECT</Logo>
+        <Image src={Logo} alt="desktop-app-logo" width={80} height={16} />
 
         <NavMenu>
           <NavItem>
@@ -329,17 +253,13 @@ export const DesktopNavbar: React.FC = () => {
       <NavRight>
         <SignInButton to="/signin">Sign In</SignInButton>
         <SignUpButton to="/signup">Sign Up</SignUpButton>
-        <GridButton onClick={handleGridClick} aria-label="Open menu">
-          <span />
-          <span />
-          <span />
-          <span />
-          <span />
-          <span />
-          <span />
-          <span />
-          <span />
-        </GridButton>
+        <IconButton
+          color="inherit"
+          onClick={handleGridClick}
+          aria-label="Open menu"
+        >
+          <NineDotsIcon />
+        </IconButton>
       </NavRight>
     </NavbarContainer>
   );
