@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   ChevronDownIcon,
@@ -11,9 +11,17 @@ import {
   VerifiedIcon,
 } from "../../../assets/icons";
 import { MenuItem, MenuPopup } from "../../../components/atoms";
-import { useInfiniteScroll, useMenu } from "../../../hooks";
-import { sdk } from "../../../sdk";
+import {
+  useAppDispatch,
+  useAppSelector,
+  useInfiniteScroll,
+  useMenu,
+} from "../../../hooks";
 import { PricingOption } from "../../../sdk/types";
+import {
+  fetchProducts,
+  loadMoreProducts,
+} from "../../../slices/productListSlice";
 
 // Utility function to display pricing option
 const getPricingOptionLabel = (option: PricingOption): string => {
@@ -317,9 +325,11 @@ const ProductList = () => {
     Record<string, string[]>
   >({});
   const [sortBy, setSortBy] = useState("featured");
-  const [apiData, setApiData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  // Redux state
+  const dispatch = useAppDispatch();
+  const { products, loading, loadingMore, error, hasMore, currentPage } =
+    useAppSelector((state) => state.productList);
 
   // Use custom hook for menu click-outside functionality
   const { getMenuRef } = useMenu({
@@ -330,34 +340,21 @@ const ProductList = () => {
   // Use infinite scroll hook for better UX
   useInfiniteScroll({
     onLoadMore: () => {
-      // In a real implementation, this would fetch more products
-      console.log("Loading more products...");
+      if (!loadingMore && hasMore) {
+        dispatch(loadMoreProducts());
+      }
     },
-    hasMore: apiData.length > 0, // Only load more if we have initial data
-    threshold: 300, // Trigger when 300px from bottom
-    isLoading: loading, // Prevent multiple loads while fetching
+    hasMore: hasMore,
+    threshold: 300,
+    isLoading: loading || loadingMore,
   });
-
-  const fetchApiData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      console.log("Fetching data from API...");
-      const data = await sdk.products.getProducts();
-      console.log("API Response:", data);
-      setApiData(data);
-    } catch (err: any) {
-      console.error("Failed to fetch API data:", err);
-      setError(err.message || "Failed to fetch data");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   // Fetch data from API on component mount
   useEffect(() => {
-    fetchApiData();
-  }, [fetchApiData]);
+    if (products.length === 0 && !loading) {
+      dispatch(fetchProducts());
+    }
+  }, [dispatch, products.length, loading]);
 
   const toggleFilter = (filterId: string) => {
     setOpenFilterId(openFilterId === filterId ? null : filterId);
@@ -434,13 +431,18 @@ const ProductList = () => {
 
       <HeaderRow>
         <ItemCount>
-          {loading ? "Loading..." : `${apiData.length.toLocaleString()} Items`}
+          {loading ? "Loading..." : `${products.length.toLocaleString()} Items`}
           {error && (
             <span style={{ color: "red", marginLeft: "10px" }}>({error})</span>
           )}
-          {apiData.length > 0 && (
+          {products.length > 0 && (
             <span style={{ color: "#00D9FF", marginLeft: "10px" }}>
-              (API Data Loaded)
+              (Redux Data Loaded - Page {currentPage})
+            </span>
+          )}
+          {loadingMore && (
+            <span style={{ color: "#fbbf24", marginLeft: "10px" }}>
+              (Loading more...)
             </span>
           )}
         </ItemCount>
@@ -457,7 +459,7 @@ const ProductList = () => {
       </HeaderRow>
 
       <ProductGrid>
-        {apiData.map((product) => (
+        {products.map((product) => (
           <ProductCard key={product.id}>
             <ProductImageContainer>
               <PricingBadge $pricingOption={product.pricingOption}>

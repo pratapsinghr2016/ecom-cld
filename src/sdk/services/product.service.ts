@@ -22,7 +22,7 @@ export class ProductService {
   }
 
   // Get data from the closet recruiting API
-  async getProducts(): Promise<DisplayProduct[]> {
+  async getProducts(page: number = 1): Promise<DisplayProduct[]> {
     try {
       const response = await httpClient.get<any>("/data");
 
@@ -46,6 +46,7 @@ export class ProductService {
         rawData.length > 0
           ? rawData.map((item, index) => ({
               id: item.id || `api-${index}`,
+              page: page,
               image:
                 item.imagePath ||
                 `https://images.unsplash.com/photo-${
