@@ -1,54 +1,16 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import {
-  ChevronDownIcon,
-  EyeIcon,
-  FileIcon,
-  HeartIcon,
-  ResetIcon,
-  ShoppingCartIcon,
-  UsersIcon,
-  VerifiedIcon,
-} from "../../../assets/icons";
-import { MenuItem, MenuPopup } from "../../../components/atoms";
+import Filters from "../../../components/molecules/Filters";
+import ProductItem from "../../../components/molecules/ProductItem";
 import {
   useAppDispatch,
   useAppSelector,
   useInfiniteScroll,
-  useMenu,
 } from "../../../hooks";
-import { PricingOption } from "../../../sdk/types";
 import {
   fetchProducts,
   loadMoreProducts,
 } from "../../../slices/productListSlice";
-
-// Utility function to display pricing option
-const getPricingOptionLabel = (option: PricingOption): string => {
-  switch (option) {
-    case PricingOption.FREE:
-      return "Free";
-    case PricingOption.PAID:
-      return "Paid";
-    case PricingOption.VIEW_ONLY:
-      return "View Only";
-    default:
-      return "Unknown";
-  }
-};
-
-interface FilterOption {
-  label: string;
-  value: string;
-}
-
-interface Filter {
-  id: string;
-  label: string;
-  type: "checkbox" | "dropdown";
-  icon?: string;
-  options?: FilterOption[];
-}
 
 // Styled Components
 const Container = styled.div`
@@ -58,50 +20,6 @@ const Container = styled.div`
 
   @media (max-width: ${({ theme }) => theme.breakpoints.tablet}) {
     padding: ${({ theme }) => theme.spacing.md};
-  }
-`;
-
-const FiltersContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.sm};
-  margin-bottom: ${({ theme }) => theme.spacing.xl};
-  flex-wrap: wrap;
-
-  @media (max-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    display: none;
-  }
-`;
-
-const FilterButton = styled.button<{ $active?: boolean }>`
-  background-color: ${({ $active, theme }) =>
-    $active
-      ? theme.colors.border.secondary
-      : theme.colors.background.secondary};
-  color: ${({ theme }) => theme.colors.text.primary};
-  border: 1px solid ${({ theme }) => theme.colors.border.primary};
-  padding: ${({ theme }) => `${theme.spacing.sm} ${theme.spacing.md}`};
-  border-radius: 20px;
-  font-size: ${({ theme }) => theme.fontSizes.sm};
-  font-weight: ${({ theme }) => theme.fontWeights.medium};
-  font-family: ${({ theme }) => theme.fonts.primary};
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.sm};
-  transition: all ${({ theme }) => theme.transitions.fast};
-  white-space: nowrap;
-
-  &:hover {
-    background-color: ${({ theme }) => theme.colors.border.secondary};
-  }
-`;
-
-const ResetButton = styled(FilterButton)`
-  color: ${({ theme }) => theme.colors.text.secondary};
-
-  &:hover {
-    color: ${({ theme }) => theme.colors.text.primary};
   }
 `;
 
@@ -157,170 +75,7 @@ const ProductGrid = styled.div`
   }
 `;
 
-const ProductCard = styled.div`
-  background-color: ${({ theme }) => theme.colors.background.secondary};
-  border-radius: 12px;
-  overflow: hidden;
-  transition: transform ${({ theme }) => theme.transitions.fast};
-  cursor: pointer;
-
-  &:hover {
-    transform: translateY(-4px);
-  }
-`;
-
-const ProductImageContainer = styled.div`
-  position: relative;
-  width: 100%;
-  padding-top: 100%;
-  background-color: ${({ theme }) => theme.colors.background.tertiary};
-  overflow: hidden;
-`;
-
-const PricingBadge = styled.div<{ $pricingOption: PricingOption }>`
-  position: absolute;
-  top: ${({ theme }) => theme.spacing.sm};
-  left: ${({ theme }) => theme.spacing.sm};
-  background-color: ${({ $pricingOption }) => {
-    switch ($pricingOption) {
-      case PricingOption.FREE:
-        return "#4ade80"; // Green for free
-      case PricingOption.PAID:
-        return "#00D9FF"; // Cyan for paid
-      case PricingOption.VIEW_ONLY:
-        return "#fbbf24"; // Yellow for view only
-      default:
-        return "#808080"; // Gray for unknown
-    }
-  }};
-  color: ${({ theme }) => theme.colors.background.primary};
-  padding: ${({ theme }) => `${theme.spacing.xs} ${theme.spacing.sm}`};
-  border-radius: 12px;
-  font-size: ${({ theme }) => theme.fontSizes.xs};
-  font-weight: ${({ theme }) => theme.fontWeights.semibold};
-  text-transform: uppercase;
-  z-index: 2;
-`;
-
-const ProductImage = styled.img`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-`;
-
-const CartButton = styled.button`
-  position: absolute;
-  top: ${({ theme }) => theme.spacing.sm};
-  right: ${({ theme }) => theme.spacing.sm};
-  background-color: rgba(0, 0, 0, 0.7);
-  border: none;
-  padding: ${({ theme }) => theme.spacing.sm};
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color ${({ theme }) => theme.transitions.fast};
-  color: ${({ theme }) => theme.colors.text.primary};
-
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.9);
-  }
-`;
-
-const ProductInfo = styled.div`
-  padding: ${({ theme }) => theme.spacing.md};
-`;
-
-const Username = styled.div`
-  color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: ${({ theme }) => theme.fontSizes.xs};
-  font-family: ${({ theme }) => theme.fonts.primary};
-  margin-bottom: ${({ theme }) => theme.spacing.xs};
-`;
-
-const ProductTitle = styled.h3`
-  color: ${({ theme }) => theme.colors.text.primary};
-  font-size: ${({ theme }) => theme.fontSizes.md};
-  font-weight: ${({ theme }) => theme.fontWeights.semibold};
-  font-family: ${({ theme }) => theme.fonts.primary};
-  margin: 0 0 ${({ theme }) => theme.spacing.sm} 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`;
-
-const Price = styled.div`
-  color: ${({ theme }) => theme.colors.text.primary};
-  font-size: ${({ theme }) => theme.fontSizes.lg};
-  font-weight: ${({ theme }) => theme.fontWeights.bold};
-  font-family: ${({ theme }) => theme.fonts.primary};
-  margin-bottom: ${({ theme }) => theme.spacing.sm};
-`;
-
-const Stats = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.md};
-  color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: ${({ theme }) => theme.fontSizes.xs};
-  font-family: ${({ theme }) => theme.fonts.primary};
-`;
-
-const Stat = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.xs};
-`;
-
-// Filter Menu Popup
-const FilterWrapper = styled.div`
-  position: relative;
-`;
-
-// Component
-const filters: Filter[] = [
-  {
-    id: "curators-pick",
-    label: "Curator's Pick",
-    type: "checkbox",
-    icon: "verified",
-  },
-  {
-    id: "following",
-    label: "Following",
-    type: "checkbox",
-    icon: "users",
-  },
-  {
-    id: "file-type",
-    label: "Fbx / Gltf",
-    type: "checkbox",
-    icon: "file",
-  },
-  {
-    id: "official",
-    label: "Official",
-    type: "dropdown",
-  },
-  {
-    id: "price",
-    label: "Price",
-    type: "dropdown",
-    options: [
-      { label: "Under $10", value: "0-10" },
-      { label: "$10 - $50", value: "10-50" },
-      { label: "$50 - $100", value: "50-100" },
-      { label: "Over $100", value: "100+" },
-    ],
-  },
-];
-
 const ProductList = () => {
-  const [openFilterId, setOpenFilterId] = useState<string | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<
     Record<string, string[]>
   >({});
@@ -330,12 +85,6 @@ const ProductList = () => {
   const dispatch = useAppDispatch();
   const { products, loading, loadingMore, error, hasMore, currentPage } =
     useAppSelector((state) => state.productList);
-
-  // Use custom hook for menu click-outside functionality
-  const { getMenuRef } = useMenu({
-    isOpen: openFilterId !== null,
-    onClose: () => setOpenFilterId(null),
-  });
 
   // Use infinite scroll hook for better UX
   useInfiniteScroll({
@@ -356,16 +105,13 @@ const ProductList = () => {
     }
   }, [dispatch, products.length, loading]);
 
-  const toggleFilter = (filterId: string) => {
-    setOpenFilterId(openFilterId === filterId ? null : filterId);
-  };
-
-  const handleFilterChange = (filterId: string, value: string) => {
+  const handleFilterChange = (filterId: string, value: string | number) => {
     setSelectedFilters((prev) => {
       const current = prev[filterId] || [];
-      const updated = current.includes(value)
-        ? current.filter((v) => v !== value)
-        : [...current, value];
+      const stringValue = String(value);
+      const updated = current.includes(stringValue)
+        ? current.filter((v) => v !== stringValue)
+        : [...current, stringValue];
       return { ...prev, [filterId]: updated };
     });
   };
@@ -377,57 +123,24 @@ const ProductList = () => {
 
   const hasActiveFilters = Object.keys(selectedFilters).length > 0;
 
+  const handleCartClick = (productId: string) => {
+    console.log("Add to cart clicked for product:", productId);
+    // Add cart functionality here
+  };
+
+  const handleProductClick = (productId: string) => {
+    console.log("Product clicked:", productId);
+    // Add navigation to product detail page here
+  };
+
   return (
     <Container>
-      <FiltersContainer>
-        {filters.map((filter) => (
-          <FilterWrapper
-            key={filter.id}
-            ref={getMenuRef(filter.id === openFilterId)}
-          >
-            <FilterButton
-              $active={selectedFilters[filter.id]?.length > 0}
-              onClick={() => toggleFilter(filter.id)}
-            >
-              {filter.icon === "verified" && <VerifiedIcon size={16} />}
-              {filter.icon === "users" && <UsersIcon size={16} />}
-              {filter.icon === "file" && <FileIcon size={16} />}
-              {filter.label}
-              {filter.options && <ChevronDownIcon size={16} />}
-            </FilterButton>
-
-            {filter.options && (
-              <MenuPopup
-                isOpen={openFilterId === filter.id}
-                title={filter.label}
-              >
-                {filter.options.map((option) => (
-                  <MenuItem key={option.value}>
-                    <input
-                      type="checkbox"
-                      checked={
-                        selectedFilters[filter.id]?.includes(option.value) ||
-                        false
-                      }
-                      onChange={() =>
-                        handleFilterChange(filter.id, option.value)
-                      }
-                    />
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </MenuPopup>
-            )}
-          </FilterWrapper>
-        ))}
-
-        {hasActiveFilters && (
-          <ResetButton onClick={resetFilters}>
-            <ResetIcon size={16} />
-            RESET
-          </ResetButton>
-        )}
-      </FiltersContainer>
+      <Filters
+        selectedFilters={selectedFilters}
+        onFilterChange={handleFilterChange}
+        onResetFilters={resetFilters}
+        hasActiveFilters={hasActiveFilters}
+      />
 
       <HeaderRow>
         <ItemCount>
@@ -437,7 +150,7 @@ const ProductList = () => {
           )}
           {products.length > 0 && (
             <span style={{ color: "#00D9FF", marginLeft: "10px" }}>
-              (Redux Data Loaded - Page {currentPage})
+              Page: {currentPage}{" "}
             </span>
           )}
           {loadingMore && (
@@ -460,32 +173,19 @@ const ProductList = () => {
 
       <ProductGrid>
         {products.map((product) => (
-          <ProductCard key={product.id}>
-            <ProductImageContainer>
-              <PricingBadge $pricingOption={product.pricingOption}>
-                {getPricingOptionLabel(product.pricingOption)}
-              </PricingBadge>
-              <ProductImage src={product.image} alt={product.title} />
-              <CartButton>
-                <ShoppingCartIcon size={20} />
-              </CartButton>
-            </ProductImageContainer>
-            <ProductInfo>
-              <Username>{product.username}</Username>
-              <ProductTitle>{product.title}</ProductTitle>
-              <Price>$ {product.price.toFixed(2)}</Price>
-              <Stats>
-                <Stat>
-                  <EyeIcon size={14} />
-                  {product.views}
-                </Stat>
-                <Stat>
-                  <HeartIcon size={14} />
-                  {product.likes}
-                </Stat>
-              </Stats>
-            </ProductInfo>
-          </ProductCard>
+          <ProductItem
+            key={product.id}
+            id={product.id}
+            image={product.image}
+            title={product.title}
+            username={product.username}
+            price={product.price}
+            views={product.views}
+            likes={product.likes}
+            pricingOption={product.pricingOption}
+            onCartClick={handleCartClick}
+            onProductClick={handleProductClick}
+          />
         ))}
       </ProductGrid>
     </Container>
