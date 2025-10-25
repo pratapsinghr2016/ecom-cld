@@ -8,8 +8,10 @@ import {
   useInfiniteScroll,
 } from "../../../hooks";
 import {
+  fetchFilteredProducts,
   fetchProducts,
   loadMoreProducts,
+  setSelectedFilters,
 } from "../../../slices/productListSlice";
 
 // Styled Components
@@ -76,15 +78,13 @@ const ProductGrid = styled.div`
 `;
 
 const ProductList = () => {
-  const [selectedFilters, setSelectedFilters] = useState<
-    Record<string, string[]>
-  >({});
   const [sortBy, setSortBy] = useState("featured");
 
   // Redux state
   const dispatch = useAppDispatch();
   const { products, loading, loadingMore, error, hasMore, currentPage } =
     useAppSelector((state) => state.productList);
+  const { selectedFilters } = useAppSelector((state) => state.productList);
 
   // Use infinite scroll hook for better UX
   useInfiniteScroll({
@@ -106,14 +106,16 @@ const ProductList = () => {
   }, [dispatch, products.length, loading]);
 
   const handleFilterChange = (filterId: string, value: string | number) => {
-    setSelectedFilters((prev) => {
-      const current = prev[filterId] || [];
-      const stringValue = String(value);
-      const updated = current.includes(stringValue)
-        ? current.filter((v) => v !== stringValue)
-        : [...current, stringValue];
-      return { ...prev, [filterId]: updated };
-    });
+    console.log("Filter changed:", filterId, value);
+    dispatch(
+      fetchFilteredProducts({ ...selectedFilters, [filterId]: [String(value)] })
+    );
+    dispatch(
+      setSelectedFilters({
+        ...selectedFilters,
+        [filterId]: [String(value)],
+      })
+    );
   };
 
   const resetFilters = () => {
@@ -132,7 +134,7 @@ const ProductList = () => {
     console.log("Product clicked:", productId);
     // Add navigation to product detail page here
   };
-
+  console.log("Rendering ProductList with products:", products);
   return (
     <Container>
       <Filters

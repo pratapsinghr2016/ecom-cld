@@ -56,7 +56,7 @@ const filters: Filter[] = [
     type: "dropdown",
   },
   {
-    id: "price",
+    id: "pricingOption",
     label: "Price",
     type: "dropdown",
     options: [
@@ -148,7 +148,7 @@ const Filters: React.FC<FiltersProps> = ({
         return null;
     }
   };
-
+  console.log("Selected Filters:", selectedFilters);
   return (
     <FiltersContainer>
       {filters.map((filter) => (

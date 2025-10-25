@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { sdk } from "../sdk";
-import { DisplayProduct } from "../sdk/types";
+import { DisplayProduct, ProductFilters } from "../sdk/types";
 
 // Async thunk for fetching products
 export const fetchProducts = createAsyncThunk(
@@ -55,6 +55,33 @@ export const loadMoreProducts = createAsyncThunk(
   }
 );
 
+// Product list filter state
+export const fetchFilteredProducts = createAsyncThunk(
+  "productList/fetchFilteredProducts",
+  async (filters: ProductFilters, { rejectWithValue }) => {
+    try {
+      // Filter implementation
+      const response: any = await sdk.products.filterProducts(filters);
+      console.log("Applying filters via Redux:", response);
+
+      // Transform the data to ensure unique IDs with page information
+      const transformedData = response.products.map(
+        (product: any, index: number) => ({
+          ...product,
+          id: `${product.id}-filtered-${index}-1`, // Make IDs unique for filtered results
+        })
+      );
+
+      return { products: transformedData, page: 1 };
+    } catch (error: any) {
+      console.error("Failed to fetch filtered products:", error);
+      return rejectWithValue(
+        error.message || "Failed to fetch filtered products"
+      );
+    }
+  }
+);
+
 interface ProductListState {
   products: DisplayProduct[];
   loading: boolean;
@@ -62,6 +89,7 @@ interface ProductListState {
   error: string | null;
   hasMore: boolean;
   currentPage: number;
+  selectedFilters: Record<string, string[]>;
 }
 
 const initialState: ProductListState = {
@@ -71,6 +99,7 @@ const initialState: ProductListState = {
   error: null,
   hasMore: true,
   currentPage: 1,
+  selectedFilters: {},
 };
 
 const productListSlice = createSlice({
@@ -88,6 +117,12 @@ const productListSlice = createSlice({
     },
     setHasMore: (state, action: PayloadAction<boolean>) => {
       state.hasMore = action.payload;
+    },
+    setSelectedFilters: (
+      state,
+      action: PayloadAction<Record<string, string[]>>
+    ) => {
+      state.selectedFilters = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -122,10 +157,25 @@ const productListSlice = createSlice({
       .addCase(loadMoreProducts.rejected, (state, action) => {
         state.loadingMore = false;
         state.error = action.payload as string;
+      })
+      // Handle fetchFilteredProducts
+      .addCase(fetchFilteredProducts.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchFilteredProducts.fulfilled, (state, action) => {
+        state.loading = false;
+        state.products = action.payload.products;
+        state.currentPage = action.payload.page || 1;
+        state.hasMore = action.payload.products.length > 0;
+      })
+      .addCase(fetchFilteredProducts.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });
 
-export const { clearError, resetProducts, setHasMore } =
+export const { clearError, resetProducts, setHasMore, setSelectedFilters } =
   productListSlice.actions;
 export default productListSlice.reducer;

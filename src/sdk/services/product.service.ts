@@ -1,6 +1,6 @@
+import { store } from "../../store";
 import { httpClient } from "../http-client";
 import {
-  ApiResponse,
   DisplayProduct,
   PaginationParams,
   PricingOption,
@@ -69,26 +69,43 @@ export class ProductService {
     }
   }
 
-  // Get featured products
-  async getFeaturedProducts(limit: number = 10): Promise<ProductsResponse> {
-    const response = await httpClient.get<ProductsResponse["data"]>(
-      "/products/featured",
-      {
-        params: { limit },
-      }
-    );
-    return response as ProductsResponse;
-  }
+  // Filter products
+  async filterProducts(filters: ProductFilters): Promise<ProductsResponse> {
+    const params = {
+      ...filters,
+    };
 
-  // Get product by ID
-  async getProductById(id: string): Promise<Product> {
-    const response = await httpClient.get<Product>(`/products/${id}`);
-
-    if (response.success && response.data) {
-      return response.data;
+    let response = null;
+    // real end point to be used
+    try {
+      response = await httpClient.get<ProductsResponse["data"]>(
+        "/products/filter",
+        { params }
+      );
+      console.log("Filter Products Response:", response);
+    } catch (error) {
+      console.error("Failed to filter products:", error);
+      const { productList } = store.getState();
+      const filteredProducts = productList?.products.filter((product) => {
+        let matches = true;
+        if (filters.pricingOption?.length) {
+          const strPricings = String(product.pricingOption);
+          matches =
+            matches &&
+            filters.pricingOption?.includes(
+              strPricings as unknown as PricingOption
+            );
+        }
+        return matches;
+      });
+      response = {
+        ...response,
+        products: filteredProducts,
+      };
+      console.log("Current productList from store:", response);
     }
 
-    throw new Error("Product not found");
+    return response as ProductsResponse;
   }
 
   // Search products
@@ -138,40 +155,6 @@ export class ProductService {
         params: { limit },
       }
     );
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-
-    return [];
-  }
-
-  // Get product reviews
-  async getProductReviews(
-    productId: string,
-    pagination?: PaginationParams
-  ): Promise<ApiResponse<any[]>> {
-    const response = await httpClient.get(`/products/${productId}/reviews`, {
-      params: pagination,
-    });
-    return response;
-  }
-
-  // Add product review (requires authentication)
-  async addProductReview(
-    productId: string,
-    review: {
-      rating: number;
-      comment: string;
-      title?: string;
-    }
-  ): Promise<ApiResponse> {
-    return await httpClient.post(`/products/${productId}/reviews`, review);
-  }
-
-  // Get product categories
-  async getCategories(): Promise<string[]> {
-    const response = await httpClient.get<string[]>("/products/categories");
 
     if (response.success && response.data) {
       return response.data;

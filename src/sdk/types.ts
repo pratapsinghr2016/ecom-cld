@@ -107,7 +107,7 @@ export interface ProductFilters {
   maxPrice?: number;
   rating?: number;
   inStock?: boolean;
-  search?: string;
+  pricingOption?: PricingOption[];
 }
 
 export interface ProductsResponse extends PaginatedResponse<Product> {}
