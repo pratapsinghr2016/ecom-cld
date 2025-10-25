@@ -11,25 +11,6 @@ interface AppRouterProps {
 
 const AppRouter = ({ isAuthenticated = false }: AppRouterProps) => {
   return (
-    <Routes>
-      {/* Public Routes */}
-      {publicRoutes.map((route) => {
-        const Component = route.component;
-        return (
-          <Route
-            key={route.path}
-            path={route.path}
-            element={
-              <PublicRoute isAuthenticated={isAuthenticated}>
-                <Component />
-              </PublicRoute>
-            }
-          />
-        );
-      })}
-    </Routes>
-  );
-  return (
     <Suspense fallback={<LoadingSpinner />}>
       <Routes>
         {/* Public Routes */}

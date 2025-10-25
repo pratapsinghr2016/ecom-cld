@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { NineDotsIcon } from "../../assets/icons";
+import { navigationRoutes } from "../../routes/routeConfig";
 import IconButton from "../atoms/IconButton";
 import Image from "../atoms/Image";
 
@@ -177,16 +178,6 @@ const SignUpButton = styled(Link)`
   }
 `;
 
-const GridButton = styled.button`
-  padding: 6px;
-  border-radius: 4px;
-  transition: background-color ${({ theme }) => theme.transitions.fast};
-
-  &:hover {
-    background-color: ${({ theme }) => theme.colors.button.secondaryHover};
-  }
-`;
-
 // Component
 export const DesktopNavbar: React.FC = () => {
   const [appsDropdownOpen, setAppsDropdownOpen] = useState<boolean>(false);
@@ -205,48 +196,51 @@ export const DesktopNavbar: React.FC = () => {
   return (
     <NavbarContainer>
       <NavLeft>
-        <Image src={Logo} alt="desktop-app-logo" width={80} height={16} />
+        <NavLink to={"/"}>
+          <Image src={Logo} alt="desktop-app-logo" width={80} height={16} />
+        </NavLink>
 
         <NavMenu>
-          <NavItem>
-            <NavLink to="/store">Store</NavLink>
-          </NavItem>
+          {navigationRoutes.map((route) => {
+            if (route.external) {
+              return (
+                <NavItem key={route.path}>
+                  <ExternalLink
+                    href={route.path}
+                    target={route.target}
+                    rel={route.rel}
+                  >
+                    {route.label}
+                  </ExternalLink>
+                </NavItem>
+              );
+            }
 
-          <NavItem>
-            <NavLink to="/gallery">Gallery</NavLink>
-          </NavItem>
+            if (route.label === "Apps") {
+              return (
+                <NavItem
+                  key={route.path}
+                  onMouseEnter={() => setAppsDropdownOpen(true)}
+                  onMouseLeave={() => setAppsDropdownOpen(false)}
+                >
+                  <DropdownButton>{route.label}</DropdownButton>
+                  <DropdownMenu $isOpen={appsDropdownOpen}>
+                    {appsItems.map((item) => (
+                      <DropdownItem key={item.path} to={item.path}>
+                        {item.label}
+                      </DropdownItem>
+                    ))}
+                  </DropdownMenu>
+                </NavItem>
+              );
+            }
 
-          <NavItem>
-            <NavLink to="/contest">Contest</NavLink>
-          </NavItem>
-
-          <NavItem>
-            <NavLink to="/community">Community</NavLink>
-          </NavItem>
-
-          <NavItem
-            onMouseEnter={() => setAppsDropdownOpen(true)}
-            onMouseLeave={() => setAppsDropdownOpen(false)}
-          >
-            <DropdownButton>Apps</DropdownButton>
-            <DropdownMenu $isOpen={appsDropdownOpen}>
-              {appsItems.map((item) => (
-                <DropdownItem key={item.path} to={item.path}>
-                  {item.label}
-                </DropdownItem>
-              ))}
-            </DropdownMenu>
-          </NavItem>
-
-          <NavItem>
-            <ExternalLink
-              href="https://connect.clo-set.com/gamewear/inzoi"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Gamewear
-            </ExternalLink>
-          </NavItem>
+            return (
+              <NavItem key={route.path}>
+                <NavLink to={route.path}>{route.label}</NavLink>
+              </NavItem>
+            );
+          })}
         </NavMenu>
       </NavLeft>
 

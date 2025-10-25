@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { BellIcon, CloseIcon, HamburgerIcon } from "../../assets/icons";
 import LogoImage from "../../assets/logo-sm-screen.png";
+import { navigationRoutes } from "../../routes/routeConfig";
 import IconButton from "../atoms/IconButton";
 import Image from "../atoms/Image";
 
@@ -33,15 +34,7 @@ const MobileNavContainer = styled.nav`
 const LogoLink = styled(Link)`
   display: flex;
   align-items: center;
-`;
-
-const LogoSvg = styled.svg`
-  width: 40px;
-  height: 40px;
-
-  path {
-    fill: ${({ theme }) => theme.colors.primary.cyan};
-  }
+  cursor: pointer;
 `;
 
 const NavActions = styled.div`
@@ -84,6 +77,21 @@ const MobileMenuList = styled.ul`
 const MobileMenuItem = styled.li``;
 
 const MobileMenuLink = styled(Link)`
+  display: block;
+  padding: ${({ theme }) => `${theme.spacing.md} 0`};
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: ${({ theme }) => theme.fontSizes["2xl"]};
+  font-weight: ${({ theme }) => theme.fontWeights.semibold};
+  text-transform: uppercase;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border.primary};
+  transition: color ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.primary.cyan};
+  }
+`;
+
+const MobileExternalLink = styled.a`
   display: block;
   padding: ${({ theme }) => `${theme.spacing.md} 0`};
   color: ${({ theme }) => theme.colors.text.primary};
@@ -172,36 +180,24 @@ export const MobileNavbar: React.FC = () => {
 
       <MobileMenu $isOpen={menuOpen}>
         <MobileMenuList>
-          <MobileMenuItem>
-            <MobileMenuLink to="/store" onClick={closeMenu}>
-              Store
-            </MobileMenuLink>
-          </MobileMenuItem>
-          <MobileMenuItem>
-            <MobileMenuLink to="/gallery" onClick={closeMenu}>
-              Gallery
-            </MobileMenuLink>
-          </MobileMenuItem>
-          <MobileMenuItem>
-            <MobileMenuLink to="/contest" onClick={closeMenu}>
-              Contest
-            </MobileMenuLink>
-          </MobileMenuItem>
-          <MobileMenuItem>
-            <MobileMenuLink to="/community" onClick={closeMenu}>
-              Community
-            </MobileMenuLink>
-          </MobileMenuItem>
-          <MobileMenuItem>
-            <MobileMenuLink to="/apps" onClick={closeMenu}>
-              Apps
-            </MobileMenuLink>
-          </MobileMenuItem>
-          <MobileMenuItem>
-            <MobileMenuLink to="/gamewear" onClick={closeMenu}>
-              Gamewear
-            </MobileMenuLink>
-          </MobileMenuItem>
+          {navigationRoutes.map((route) => (
+            <MobileMenuItem key={route.path}>
+              {route.external ? (
+                <MobileExternalLink
+                  href={route.path}
+                  target={route.target}
+                  rel={route.rel}
+                  onClick={closeMenu}
+                >
+                  {route.label}
+                </MobileExternalLink>
+              ) : (
+                <MobileMenuLink to={route.path} onClick={closeMenu}>
+                  {route.label}
+                </MobileMenuLink>
+              )}
+            </MobileMenuItem>
+          ))}
         </MobileMenuList>
 
         <MobileMenuButtons>

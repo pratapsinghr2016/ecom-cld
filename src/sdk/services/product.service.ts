@@ -82,9 +82,11 @@ export class ProductService {
         "/products/filter",
         { params }
       );
-      console.log("Filter Products Response:", response);
+      console.log("Filter Products API Response:", response);
     } catch (error) {
       console.error("Failed to filter products:", error);
+      console.log("Filtering from store state as fallback.");
+
       const { productList } = store.getState();
       const filteredProducts = productList?.products.filter((product) => {
         let matches = true;

@@ -3,6 +3,12 @@ import { ComponentType, lazy } from "react";
 // Actual page components
 const Home = lazy(() => import("../pages/Home"));
 const Store = lazy(() => import("../pages/Store"));
+const Gallery = lazy(() => import("../pages/Gallery"));
+const Contest = lazy(() => import("../pages/Contest"));
+const Community = lazy(() => import("../pages/Community"));
+const Apps = lazy(() => import("../pages/Apps"));
+const Gamewear = lazy(() => import("../pages/Gamewear"));
+const NotFound = lazy(() => import("../pages/NotFound"));
 
 // Placeholder component for routes under construction
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -30,15 +36,15 @@ const Checkout = lazy(() =>
   })
 );
 
-const Login = lazy(() =>
+const SignIn = lazy(() =>
   Promise.resolve({
-    default: () => <PlaceholderPage title="Login" />,
+    default: () => <PlaceholderPage title="Sign In" />,
   })
 );
 
-const Register = lazy(() =>
+const SignUp = lazy(() =>
   Promise.resolve({
-    default: () => <PlaceholderPage title="Register" />,
+    default: () => <PlaceholderPage title="Sign Up" />,
   })
 );
 
@@ -66,12 +72,6 @@ const Wishlist = lazy(() =>
   })
 );
 
-const NotFound = lazy(() =>
-  Promise.resolve({
-    default: () => <PlaceholderPage title="404 - Page Not Found" />,
-  })
-);
-
 export interface RouteConfig {
   path: string;
   component: React.LazyExoticComponent<ComponentType<any>>;
@@ -93,18 +93,54 @@ export const publicRoutes: RouteConfig[] = [
     isPrivate: false,
   },
   {
+    path: "/gallery",
+    component: Gallery,
+    isPrivate: false,
+  },
+  {
+    path: "/contest",
+    component: Contest,
+    isPrivate: false,
+  },
+  {
+    path: "/community",
+    component: Community,
+    isPrivate: false,
+  },
+  {
+    path: "/apps",
+    component: Apps,
+    isPrivate: false,
+  },
+  {
+    path: "/gamewear",
+    component: Gamewear,
+    isPrivate: false,
+  },
+  // extra routes can be added here
+  {
     path: "/product/:id",
     component: ProductDetail,
     isPrivate: false,
   },
   {
-    path: "/login",
-    component: Login,
+    path: "/cart",
+    component: Cart,
     isPrivate: false,
   },
   {
-    path: "/register",
-    component: Register,
+    path: "/checkout",
+    component: Checkout,
+    isPrivate: false,
+  },
+  {
+    path: "/signin",
+    component: SignIn,
+    isPrivate: false,
+  },
+  {
+    path: "/signup",
+    component: SignUp,
     isPrivate: false,
   },
 ];
@@ -149,5 +185,44 @@ export const specialRoutes: RouteConfig[] = [
     path: "*",
     component: NotFound,
     isPrivate: false,
+  },
+];
+
+// Navigation Routes - Common navigation items for both desktop and mobile navbars
+export interface NavigationRoute {
+  label: string;
+  path: string;
+  external?: boolean;
+  target?: string;
+  rel?: string;
+}
+
+export const navigationRoutes: NavigationRoute[] = [
+  {
+    label: "Store",
+    path: "/store",
+  },
+  {
+    label: "Gallery",
+    path: "/gallery",
+  },
+  {
+    label: "Contest",
+    path: "/contest",
+  },
+  {
+    label: "Community",
+    path: "/community",
+  },
+  {
+    label: "Apps",
+    path: "/apps",
+  },
+  {
+    label: "Gamewear",
+    path: "https://connect.clo-set.com/gamewear/inzoi",
+    external: true,
+    target: "_blank",
+    rel: "noopener noreferrer",
   },
 ];

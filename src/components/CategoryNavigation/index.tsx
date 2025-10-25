@@ -1,5 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import {
+  ChevronDownIcon,
+  CloseIcon,
+  FilterIcon,
+  SearchIcon,
+} from "../../assets/icons";
 
 // Desktop Styles
 const DesktopContainer = styled.div`
@@ -66,11 +73,6 @@ const StoreDropdown = styled.button`
 
   &:hover {
     opacity: 0.8;
-  }
-
-  svg {
-    width: 16px;
-    height: 16px;
   }
 `;
 
@@ -170,25 +172,15 @@ const SearchInput = styled.input`
   }
 `;
 
-const SearchIcon = styled.div`
+const SearchIconWrapper = styled.div`
   position: absolute;
   left: ${({ theme }) => theme.spacing.lg};
   top: 50%;
   transform: translateY(-50%);
   color: ${({ theme }) => theme.colors.text.secondary};
 
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-
   @media (max-width: ${({ theme }) => (theme.breakpoints as any).tablet}) {
     left: ${({ theme }) => theme.spacing.md || "1rem"};
-
-    svg {
-      width: 16px;
-      height: 16px;
-    }
   }
 `;
 
@@ -203,11 +195,6 @@ const FilterButton = styled.button`
 
   &:hover {
     opacity: 0.8;
-  }
-
-  svg {
-    width: 20px;
-    height: 20px;
   }
 
   @media (max-width: ${({ theme }) => (theme.breakpoints as any).tablet}) {
@@ -276,11 +263,6 @@ const CloseButton = styled.button`
   padding: ${({ theme }) => theme.spacing.xs || "0.25rem"};
   display: flex;
   align-items: center;
-
-  svg {
-    width: 24px;
-    height: 24px;
-  }
 `;
 
 const FilterSection = styled.div`
@@ -319,6 +301,7 @@ export default function CategoryNavigation({
   onCategoryChange,
   onStoreChange,
 }: CategoryNavigationProps) {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -326,6 +309,7 @@ export default function CategoryNavigation({
   const handleTabClick = (category: string) => {
     setActiveTab(category);
     onCategoryChange?.(category);
+    navigate(`/store/${category.toLowerCase()}`);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -356,17 +340,9 @@ export default function CategoryNavigation({
         </TabsContainer>
 
         <SearchContainer>
-          <SearchIcon>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
-          </SearchIcon>
+          <SearchIconWrapper>
+            <SearchIcon size={20} />
+          </SearchIconWrapper>
           <SearchInput
             type="text"
             placeholder="Find the items you're looking for"
@@ -382,14 +358,7 @@ export default function CategoryNavigation({
           <TopRow>
             <StoreDropdown onClick={onStoreChange}>
               Store
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
+              <ChevronDownIcon size={16} />
             </StoreDropdown>
             <TabsContainer>
               {categories.slice(0, 4).map((category) => (
@@ -406,17 +375,9 @@ export default function CategoryNavigation({
 
           <SearchRow>
             <SearchContainer>
-              <SearchIcon>
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <circle cx="11" cy="11" r="8" />
-                  <path d="m21 21-4.35-4.35" />
-                </svg>
-              </SearchIcon>
+              <SearchIconWrapper>
+                <SearchIcon size={16} />
+              </SearchIconWrapper>
               <SearchInput
                 type="text"
                 placeholder="Find the items you're looking for"
@@ -428,19 +389,7 @@ export default function CategoryNavigation({
               onClick={() => setIsDrawerOpen(true)}
               aria-label="Filter"
             >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <line x1="4" y1="6" x2="16" y2="6" />
-                <line x1="4" y1="12" x2="10" y2="12" />
-                <line x1="4" y1="18" x2="14" y2="18" />
-                <circle cx="18" cy="6" r="2" />
-                <circle cx="12" cy="12" r="2" />
-                <circle cx="16" cy="18" r="2" />
-              </svg>
+              <FilterIcon size={20} />
             </FilterButton>
           </SearchRow>
         </ContentWrapper>
@@ -455,15 +404,7 @@ export default function CategoryNavigation({
         <DrawerHeader>
           <DrawerTitle>Filters</DrawerTitle>
           <CloseButton onClick={() => setIsDrawerOpen(false)}>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <CloseIcon size={24} />
           </CloseButton>
         </DrawerHeader>
 
