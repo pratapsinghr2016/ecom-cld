@@ -10,6 +10,7 @@ import {
 import { useMenu } from "../../../hooks";
 import { PricingOption } from "../../../sdk/types";
 import { MenuItem, MenuPopup } from "../../atoms";
+import PriceRangeSlider from "../PriceRangeSlider";
 
 interface FilterOption {
   label: string | PricingOption;
@@ -19,7 +20,7 @@ interface FilterOption {
 interface Filter {
   id: string;
   label: string;
-  type: "checkbox" | "dropdown";
+  type: "checkbox" | "dropdown" | "price-range";
   icon?: string;
   options?: FilterOption[];
 }
@@ -29,6 +30,8 @@ interface FiltersProps {
   onFilterChange: (filterId: string, value: string | number) => void;
   onResetFilters: () => void;
   hasActiveFilters: boolean;
+  priceRange: [number, number];
+  onPriceRangeChange: (range: [number, number]) => void;
 }
 
 const filters: Filter[] = [
@@ -65,17 +68,51 @@ const filters: Filter[] = [
       { label: "View Only", value: PricingOption.VIEW_ONLY },
     ],
   },
+  {
+    id: "price-range",
+    label: "Price Range",
+    type: "price-range",
+  },
 ];
 
 const FiltersContainer = styled.div`
   display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.sm};
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing.md};
   margin-bottom: ${({ theme }) => theme.spacing.xl};
-  flex-wrap: wrap;
 
   @media (max-width: ${({ theme }) => theme.breakpoints.tablet}) {
     display: none;
+  }
+`;
+
+const FilterButtonsRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.sm};
+  flex-wrap: wrap;
+`;
+
+const PriceRangeContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.md};
+  margin-left: 12px;
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.tablet}) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: ${({ theme }) => theme.spacing.sm};
+  }
+`;
+
+const PriceRangeSliderWrapper = styled.div`
+  min-width: 200px;
+  max-width: 300px;
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.tablet}) {
+    width: 100%;
+    max-width: none;
   }
 `;
 
@@ -129,6 +166,8 @@ const Filters: React.FC<FiltersProps> = ({
   onFilterChange,
   onResetFilters,
   hasActiveFilters,
+  priceRange,
+  onPriceRangeChange,
 }) => {
   const [openFilterId, setOpenFilterId] = React.useState<string | null>(null);
 
@@ -154,54 +193,77 @@ const Filters: React.FC<FiltersProps> = ({
         return null;
     }
   };
+
+  const isPriceRangeActive = priceRange[0] > 0 || priceRange[1] < 999;
   console.log("Selected Filters:", selectedFilters);
+
+  // Filter out price-range from the main filter buttons
+  const buttonFilters = filters.filter(
+    (filter) => filter.type !== "price-range"
+  );
+
   return (
     <FiltersContainer>
-      {filters.map((filter) => (
-        <FilterWrapper
-          key={filter.id}
-          ref={getMenuRef(openFilterId === filter.id)}
-        >
-          <FilterButton
-            disabled={filter.id !== "pricingOption"}
-            $active={
-              selectedFilters[filter.id] &&
-              selectedFilters[filter.id].length > 0
-            }
-            onClick={() => toggleFilter(filter.id)}
+      <FilterButtonsRow>
+        {buttonFilters.map((filter) => (
+          <FilterWrapper
+            key={filter.id}
+            ref={getMenuRef(openFilterId === filter.id)}
           >
-            {renderFilterIcon(filter.icon)}
-            {filter.label}
-            {filter.options && <ChevronDownIcon size={16} />}
-          </FilterButton>
+            <FilterButton
+              disabled={filter.id !== "pricingOption"}
+              $active={
+                selectedFilters[filter.id] &&
+                selectedFilters[filter.id].length > 0
+              }
+              onClick={() => toggleFilter(filter.id)}
+            >
+              {renderFilterIcon(filter.icon)}
+              {filter.label}
+              {filter.options && <ChevronDownIcon size={16} />}
+            </FilterButton>
 
-          {filter.options && (
-            <MenuPopup isOpen={openFilterId === filter.id} title={filter.label}>
-              {filter.options.map((option) => (
-                <MenuItem key={option.value}>
-                  <input
-                    type="checkbox"
-                    checked={
-                      selectedFilters[filter.id]?.includes(
-                        String(option.value)
-                      ) || false
-                    }
-                    onChange={() => onFilterChange(filter.id, option.value)}
-                  />
-                  {option.label}
-                </MenuItem>
-              ))}
-            </MenuPopup>
-          )}
-        </FilterWrapper>
-      ))}
-
-      {hasActiveFilters && (
-        <ResetButton onClick={onResetFilters}>
-          <ResetIcon size={16} />
-          RESET
-        </ResetButton>
-      )}
+            {filter.options && (
+              <MenuPopup
+                isOpen={openFilterId === filter.id}
+                title={filter.label}
+              >
+                {filter.options.map((option) => (
+                  <MenuItem key={option.value}>
+                    <input
+                      type="checkbox"
+                      checked={
+                        selectedFilters[filter.id]?.includes(
+                          String(option.value)
+                        ) || false
+                      }
+                      onChange={() => onFilterChange(filter.id, option.value)}
+                    />
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </MenuPopup>
+            )}
+          </FilterWrapper>
+        ))}
+        <PriceRangeContainer>
+          <PriceRangeSliderWrapper>
+            <PriceRangeSlider
+              value={priceRange}
+              onChange={onPriceRangeChange}
+              min={0}
+              max={999}
+              step={1}
+            />
+          </PriceRangeSliderWrapper>
+        </PriceRangeContainer>
+        {(hasActiveFilters || isPriceRangeActive) && (
+          <ResetButton onClick={onResetFilters}>
+            <ResetIcon size={16} />
+            RESET
+          </ResetButton>
+        )}
+      </FilterButtonsRow>
     </FiltersContainer>
   );
 };

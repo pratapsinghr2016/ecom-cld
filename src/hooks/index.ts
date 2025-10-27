@@ -5,6 +5,7 @@ export {
   default as useInfiniteScrollDefault,
 } from "./useInfiniteScroll";
 export { useMenu, default as useMenuDefault } from "./useMenu";
+export { default as useThrottle } from "./useThrottle";
 
 // Redux hooks exports
 export { useAppDispatch, useAppSelector } from "./redux";

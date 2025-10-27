@@ -12,6 +12,7 @@ import {
   fetchProducts,
   loadMoreProducts,
   resetFilters,
+  setPriceRange,
   setSelectedFilters,
   setSortBy,
 } from "../../../slices/productListSlice";
@@ -90,6 +91,7 @@ const ProductList = () => {
     hasMore,
     currentPage,
     sortBy,
+    priceRange,
   } = useAppSelector((state) => state.productList);
   const { selectedFilters } = useAppSelector((state) => state.productList);
 
@@ -136,6 +138,10 @@ const ProductList = () => {
     dispatch(setSortBy(newSortBy));
   };
 
+  const handlePriceRangeChange = (range: [number, number]) => {
+    dispatch(setPriceRange(range));
+  };
+
   const hasActiveFilters = Object.keys(selectedFilters).length > 0;
 
   const handleCartClick = (productId: string) => {
@@ -155,6 +161,8 @@ const ProductList = () => {
         onFilterChange={handleFilterChange}
         onResetFilters={handleResetFilters}
         hasActiveFilters={hasActiveFilters}
+        priceRange={priceRange}
+        onPriceRangeChange={handlePriceRangeChange}
       />
 
       <HeaderRow>
