@@ -101,6 +101,12 @@ const FilterButton = styled.button<{ $active?: boolean }>`
   &:hover {
     background-color: ${({ theme }) => theme.colors.border.secondary};
   }
+
+  &:disabled {
+    background-color: ${({ theme }) => theme.colors.background.secondary};
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
 `;
 
 const ResetButton = styled(FilterButton)`
@@ -157,6 +163,7 @@ const Filters: React.FC<FiltersProps> = ({
           ref={getMenuRef(openFilterId === filter.id)}
         >
           <FilterButton
+            disabled={filter.id !== "pricingOption"}
             $active={
               selectedFilters[filter.id] &&
               selectedFilters[filter.id].length > 0
