@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
@@ -7,7 +8,12 @@ import {
   FilterIcon,
   SearchIcon,
 } from "../../../assets/icons";
+import useDebounce from "../../../hooks/useDebounce";
 import { PricingOption } from "../../../sdk";
+import {
+  fetchSearchedItem,
+  setSearchedItem,
+} from "../../../slices/productListSlice";
 
 // Desktop Styles
 const DesktopContainer = styled.div`
@@ -347,9 +353,26 @@ export default function CategoryNavigation({
   onPriceRangeChange,
 }: CategoryNavigationProps) {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // Debounce search query to avoid too many API calls
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Effect to dispatch search when debounced query changes
+  useEffect(() => {
+    // Update the search term in Redux state
+    dispatch(setSearchedItem(debouncedSearchQuery));
+
+    if (debouncedSearchQuery.trim()) {
+      dispatch(fetchSearchedItem(debouncedSearchQuery) as any);
+    } else if (debouncedSearchQuery === "") {
+      // Clear search results when query is empty
+      dispatch(setSearchedItem("") as any);
+    }
+  }, [debouncedSearchQuery, dispatch]);
 
   const handleTabClick = (category: string) => {
     setActiveTab(category);
@@ -358,8 +381,9 @@ export default function CategoryNavigation({
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    onSearch?.(e.target.value);
+    const query = e.target.value;
+    setSearchQuery(query);
+    onSearch?.(query);
   };
 
   const handleClearSearch = () => {
