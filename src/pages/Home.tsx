@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -40,14 +41,15 @@ const AuthButton = styled.button`
 `;
 
 const Home = () => {
-  const { isAuthenticated, user, login, logout } = useAuth();
-
+  const { isAuthenticated, user, /* login */ logout } = useAuth();
+  const navigate = useNavigate();
   const handleAuth = () => {
     if (isAuthenticated) {
       logout();
     } else {
       // Demo login
-      login("demo@example.com", "password");
+      // login("demo@example.com", "password");
+      navigate("/store");
     }
   };
 
@@ -58,10 +60,10 @@ const Home = () => {
         <Description>
           {isAuthenticated
             ? `Hello, ${user?.name}!`
-            : "Please sign in to access your account"}
+            : "Lets go to Store and explore our products!"}
         </Description>
         <AuthButton onClick={handleAuth}>
-          {isAuthenticated ? "Logout" : "Demo Login"}
+          {isAuthenticated ? "Logout" : "Goto Store"}
         </AuthButton>
       </Hero>
     </HomeContainer>
