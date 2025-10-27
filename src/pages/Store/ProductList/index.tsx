@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import styled from "styled-components";
 import Filters from "../../../components/molecules/Filters";
 import ProductItem from "../../../components/molecules/ProductItem";
+import ProductItemSkeleton from "../../../components/molecules/ProductItemSkeleton";
 import {
   useAppDispatch,
   useAppSelector,
@@ -192,6 +193,16 @@ const ProductList = () => {
       </HeaderRow>
 
       <ProductGrid>
+        {/* Render skeleton items when initially loading */}
+        {loading && products.length === 0 && (
+          <>
+            {Array.from({ length: 8 }).map((_, index) => (
+              <ProductItemSkeleton key={`skeleton-${index}`} />
+            ))}
+          </>
+        )}
+
+        {/* Render actual products */}
         {products.map((product) => (
           <ProductItem
             key={product.id}
@@ -207,6 +218,15 @@ const ProductList = () => {
             onProductClick={handleProductClick}
           />
         ))}
+
+        {/* Render skeleton items when loading more via infinite scroll */}
+        {loadingMore && (
+          <>
+            {Array.from({ length: 4 }).map((_, index) => (
+              <ProductItemSkeleton key={`skeleton-more-${index}`} />
+            ))}
+          </>
+        )}
       </ProductGrid>
     </Container>
   );
