@@ -60,6 +60,28 @@ export class ProductService {
               pricingOption: item.pricingOption || PricingOption.FREE,
             }))
           : [];
+      // If search query is present, filter results
+      const searchQuery = store.getState().productList.searchedItem;
+      if (searchQuery && searchQuery.length > 0) {
+        return displayProducts.filter(
+          (product) =>
+            product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            product.username.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      }
+
+      // If filter criteria exist, filter results
+      const filters = store.getState().productList.selectedFilters;
+      if (filters.pricingOption && filters.pricingOption.length > 0) {
+        return displayProducts.filter((product) => {
+          let matches = true;
+          if (filters.pricingOption?.length) {
+            const strPricings = String(product.pricingOption);
+            matches = matches && filters.pricingOption?.includes(strPricings);
+          }
+          return matches;
+        });
+      }
 
       // Transform to Product interface
       return displayProducts;
@@ -102,7 +124,7 @@ export class ProductService {
       });
       response = {
         ...response,
-        products: filteredProducts,
+        data: filteredProducts,
       };
       console.log("Current productList from store:", response);
     }
@@ -112,20 +134,43 @@ export class ProductService {
 
   // Search products
   async searchProducts(
-    query: string,
-    filters?: ProductFilters,
+    searchQuery: string,
     pagination?: PaginationParams
   ): Promise<ProductsResponse> {
     const params = {
-      search: query,
-      ...filters,
+      search: searchQuery,
       ...pagination,
     };
 
-    const response = await httpClient.get<ProductsResponse["data"]>(
-      "/products/search",
-      { params }
-    );
+    let response = null;
+
+    try {
+      response = await httpClient.get<ProductsResponse["data"]>(
+        "/products/search",
+        { params }
+      );
+    } catch (error) {
+      console.error("Failed to search products:", error);
+      const { productList } = store.getState();
+      const searchedProducts = productList?.products.filter((product) => {
+        let matches = true;
+        if (searchQuery?.length) {
+          const { title, username } = product;
+
+          matches =
+            matches &&
+            (title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              username.toLowerCase().includes(searchQuery.toLowerCase()));
+        }
+        return matches;
+      });
+      response = {
+        ...response,
+        data: searchedProducts,
+      };
+      console.log("Current productList from store:", response);
+    }
+    console.log("pppppp:", response);
     return response as ProductsResponse;
   }
 

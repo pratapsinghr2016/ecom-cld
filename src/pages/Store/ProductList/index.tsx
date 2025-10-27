@@ -11,6 +11,7 @@ import {
   fetchFilteredProducts,
   fetchProducts,
   loadMoreProducts,
+  resetFilters,
   setSelectedFilters,
 } from "../../../slices/productListSlice";
 
@@ -118,9 +119,11 @@ const ProductList = () => {
     );
   };
 
-  const resetFilters = () => {
-    setSelectedFilters({});
+  const handleResetFilters = () => {
+    dispatch(resetFilters());
     setSortBy("featured");
+    // Refetch original products after resetting filters
+    dispatch(fetchProducts());
   };
 
   const hasActiveFilters = Object.keys(selectedFilters).length > 0;
@@ -134,13 +137,13 @@ const ProductList = () => {
     console.log("Product clicked:", productId);
     // Add navigation to product detail page here
   };
-  console.log("Rendering ProductList with products:", products);
+
   return (
     <Container>
       <Filters
         selectedFilters={selectedFilters}
         onFilterChange={handleFilterChange}
-        onResetFilters={resetFilters}
+        onResetFilters={handleResetFilters}
         hasActiveFilters={hasActiveFilters}
       />
 

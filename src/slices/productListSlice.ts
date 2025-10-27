@@ -61,22 +61,32 @@ export const fetchFilteredProducts = createAsyncThunk(
   async (filters: ProductFilters, { rejectWithValue }) => {
     try {
       // Filter implementation
-      const response: any = await sdk.products.filterProducts(filters);
+      const response = await sdk.products.filterProducts(filters);
       console.log("Applying filters via Redux:", response);
 
-      // Transform the data to ensure unique IDs with page information
-      const transformedData = response.products.map(
-        (product: any, index: number) => ({
-          ...product,
-          id: `${product.id}-filtered-${index}-1`, // Make IDs unique for filtered results
-        })
-      );
-
-      return { products: transformedData, page: 1 };
+      return { products: response.data, page: 1 };
     } catch (error: any) {
       console.error("Failed to fetch filtered products:", error);
       return rejectWithValue(
         error.message || "Failed to fetch filtered products"
+      );
+    }
+  }
+);
+
+// Product list searching
+export const fetchSearchedItem = createAsyncThunk(
+  "productList/fetchSearchedItem",
+  async (searchTerm: string, { rejectWithValue }) => {
+    try {
+      const response = await sdk.products.searchProducts(searchTerm);
+      console.log("Searching products via Redux:", response);
+
+      return { products: response.data, page: 1 };
+    } catch (error: any) {
+      console.error("Failed to fetch searched products:", error);
+      return rejectWithValue(
+        error.message || "Failed to fetch searched products"
       );
     }
   }
@@ -89,6 +99,7 @@ interface ProductListState {
   error: string | null;
   hasMore: boolean;
   currentPage: number;
+  searchedItem: string;
   selectedFilters: Record<string, string[]>;
 }
 
@@ -100,6 +111,7 @@ const initialState: ProductListState = {
   hasMore: true,
   currentPage: 1,
   selectedFilters: {},
+  searchedItem: "",
 };
 
 const productListSlice = createSlice({
@@ -123,6 +135,17 @@ const productListSlice = createSlice({
       action: PayloadAction<Record<string, string[]>>
     ) => {
       state.selectedFilters = action.payload;
+    },
+    setSearchedItem: (state, action: PayloadAction<string>) => {
+      state.searchedItem = action.payload;
+    },
+    resetFilters: (state) => {
+      state.selectedFilters = {};
+      // Also reset products to original state and refetch
+      state.products = [];
+      state.currentPage = 1;
+      state.hasMore = true;
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
@@ -172,10 +195,32 @@ const productListSlice = createSlice({
       .addCase(fetchFilteredProducts.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      // Handle fetchSearchedItem
+      .addCase(fetchSearchedItem.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchSearchedItem.fulfilled, (state, action) => {
+        state.loading = false;
+        console.log("Reducer - searched items:", action.payload);
+        state.products = action.payload.products;
+        state.currentPage = action.payload.page || 1;
+        state.hasMore = action.payload.products.length > 0;
+      })
+      .addCase(fetchSearchedItem.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });
 
-export const { clearError, resetProducts, setHasMore, setSelectedFilters } =
-  productListSlice.actions;
+export const {
+  clearError,
+  resetProducts,
+  setHasMore,
+  setSelectedFilters,
+  resetFilters,
+  setSearchedItem,
+} = productListSlice.actions;
 export default productListSlice.reducer;

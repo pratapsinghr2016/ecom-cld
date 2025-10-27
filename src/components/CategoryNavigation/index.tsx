@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
@@ -7,6 +7,12 @@ import {
   FilterIcon,
   SearchIcon,
 } from "../../assets/icons";
+import { useAppDispatch, useAppSelector, useDebounce } from "../../hooks";
+import {
+  fetchProducts,
+  fetchSearchedItem,
+  setSearchedItem,
+} from "../../slices/productListSlice";
 
 // Desktop Styles
 const DesktopContainer = styled.div`
@@ -145,7 +151,7 @@ const SearchInput = styled.input`
   border: none;
   border-radius: 28px;
   padding: ${({ theme }) =>
-    `${theme.spacing.md} ${theme.spacing.lg} ${theme.spacing.md} 56px`};
+    `${theme.spacing.md} 56px ${theme.spacing.md} 56px`};
   font-size: 1rem;
   font-family: ${({ theme }) => theme.fonts.primary};
   color: ${({ theme }) => theme.colors.text.primary};
@@ -162,7 +168,7 @@ const SearchInput = styled.input`
   @media (max-width: ${({ theme }) => (theme.breakpoints as any).tablet}) {
     background-color: ${({ theme }) => theme.colors.border.primary};
     padding: ${({ theme }) =>
-      `${theme.spacing.sm} ${theme.spacing.md} ${theme.spacing.sm} 44px`};
+      `${theme.spacing.sm} 44px ${theme.spacing.sm} 44px`};
     font-size: ${({ theme }) => theme.fontSizes.sm};
     border-radius: 24px;
 
@@ -181,6 +187,32 @@ const SearchIconWrapper = styled.div`
 
   @media (max-width: ${({ theme }) => (theme.breakpoints as any).tablet}) {
     left: ${({ theme }) => theme.spacing.md || "1rem"};
+  }
+`;
+
+const ClearButton = styled.button`
+  position: absolute;
+  right: ${({ theme }) => theme.spacing.lg};
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  cursor: pointer;
+  padding: ${({ theme }) => theme.spacing.xs};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.text.primary};
+    background-color: ${({ theme }) => theme.colors.background.secondary};
+  }
+
+  @media (max-width: ${({ theme }) => (theme.breakpoints as any).tablet}) {
+    right: ${({ theme }) => theme.spacing.md || "1rem"};
   }
 `;
 
@@ -291,31 +323,41 @@ const FilterOption = styled.label`
 const categories = ["All", "Garment", "Fabric", "Trim", "Avatar", "Scene"];
 
 interface CategoryNavigationProps {
-  readonly onSearch?: (query: string) => void;
-  readonly onCategoryChange?: (category: string) => void;
   readonly onStoreChange?: () => void;
 }
 
 export default function CategoryNavigation({
-  onSearch,
-  onCategoryChange,
   onStoreChange,
 }: CategoryNavigationProps) {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const searchedInputStr = useDebounce(searchQuery);
+  const { searchedItem } = useAppSelector((state) => state.productList);
 
   const handleTabClick = (category: string) => {
     setActiveTab(category);
-    onCategoryChange?.(category);
     navigate(`/store/${category.toLowerCase()}`);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    onSearch?.(e.target.value);
   };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    dispatch(setSearchedItem(""));
+    dispatch(fetchProducts());
+  };
+
+  useEffect(() => {
+    if (searchedInputStr && searchedItem !== searchedInputStr) {
+      dispatch(fetchSearchedItem(searchedInputStr));
+      dispatch(setSearchedItem(searchedInputStr));
+    }
+  }, [searchedInputStr, dispatch]);
 
   return (
     <>
@@ -349,6 +391,11 @@ export default function CategoryNavigation({
             value={searchQuery}
             onChange={handleSearchChange}
           />
+          {searchQuery && (
+            <ClearButton onClick={handleClearSearch} aria-label="Clear search">
+              <CloseIcon size={16} />
+            </ClearButton>
+          )}
         </SearchContainer>
       </DesktopContainer>
 
@@ -384,6 +431,14 @@ export default function CategoryNavigation({
                 value={searchQuery}
                 onChange={handleSearchChange}
               />
+              {searchQuery && (
+                <ClearButton
+                  onClick={handleClearSearch}
+                  aria-label="Clear search"
+                >
+                  <CloseIcon size={14} />
+                </ClearButton>
+              )}
             </SearchContainer>
             <FilterButton
               onClick={() => setIsDrawerOpen(true)}
