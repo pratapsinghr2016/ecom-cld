@@ -57,7 +57,7 @@ export class ProductService {
               price: item.price || Math.floor(Math.random() * 20) + 5,
               views: Math.floor(Math.random() * 200) + 50,
               likes: Math.floor(Math.random() * 60) + 10,
-              pricingOption: item.pricingOption || PricingOption.FREE,
+              pricingOption: item.pricingOption,
             }))
           : [];
       // If search query is present, filter results

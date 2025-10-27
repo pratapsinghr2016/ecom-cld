@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { sdk } from "../sdk";
-import { DisplayProduct, ProductFilters } from "../sdk/types";
+import { ProductFilters } from "../sdk/types";
 
 // Async thunk for fetching products
 export const fetchProducts = createAsyncThunk(
@@ -93,7 +93,8 @@ export const fetchSearchedItem = createAsyncThunk(
 );
 
 interface ProductListState {
-  products: DisplayProduct[];
+  // products: DisplayProduct[];// Array of products
+  products: any[];
   loading: boolean;
   loadingMore: boolean;
   error: string | null;
