@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
@@ -7,12 +7,7 @@ import {
   FilterIcon,
   SearchIcon,
 } from "../../assets/icons";
-import { useAppDispatch, useAppSelector, useDebounce } from "../../hooks";
-import {
-  fetchProducts,
-  fetchSearchedItem,
-  setSearchedItem,
-} from "../../slices/productListSlice";
+import { PricingOption } from "../../sdk";
 
 // Desktop Styles
 const DesktopContainer = styled.div`
@@ -323,41 +318,54 @@ const FilterOption = styled.label`
 const categories = ["All", "Garment", "Fabric", "Trim", "Avatar", "Scene"];
 
 interface CategoryNavigationProps {
+  readonly onSearch?: (query: string) => void;
+  readonly onCategoryChange?: (category: string) => void;
   readonly onStoreChange?: () => void;
+  readonly selectedFilters: Record<string, any>;
+  readonly onFilterChange: (filterId: string, value: string | number) => void;
+  readonly onResetFilters: () => void;
+  readonly hasActiveFilters: boolean;
+  readonly priceRange: [number, number];
+  readonly onPriceRangeChange: (range: [number, number]) => void;
 }
 
+const pricingOptions = [
+  { label: "Paid", value: PricingOption.PAID },
+  { label: "Free", value: PricingOption.FREE },
+  { label: "View Only", value: PricingOption.VIEW_ONLY },
+];
+
 export default function CategoryNavigation({
+  onSearch,
+  onCategoryChange,
   onStoreChange,
+  selectedFilters,
+  onFilterChange,
+  onResetFilters,
+  hasActiveFilters,
+  priceRange,
+  onPriceRangeChange,
 }: CategoryNavigationProps) {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const searchedInputStr = useDebounce(searchQuery);
-  const { searchedItem } = useAppSelector((state) => state.productList);
 
   const handleTabClick = (category: string) => {
     setActiveTab(category);
+    onCategoryChange?.(category);
     navigate(`/store/${category.toLowerCase()}`);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
+    onSearch?.(e.target.value);
   };
 
   const handleClearSearch = () => {
     setSearchQuery("");
-    dispatch(setSearchedItem(""));
-    dispatch(fetchProducts());
+    onSearch?.("");
   };
-
-  useEffect(() => {
-    if (searchedInputStr && searchedItem !== searchedInputStr) {
-      dispatch(fetchSearchedItem(searchedInputStr));
-      dispatch(setSearchedItem(searchedInputStr));
-    }
-  }, [searchedInputStr, dispatch]);
 
   return (
     <>
@@ -464,10 +472,25 @@ export default function CategoryNavigation({
         </DrawerHeader>
 
         <FilterSection>
+          <FilterLabel>Pricing</FilterLabel>
+          {pricingOptions.map((option) => (
+            <FilterOption key={option.value}>
+              <input
+                type="checkbox"
+                checked={
+                  selectedFilters["pricing"]?.includes(String(option.value)) ||
+                  false
+                }
+                onChange={() => onFilterChange("pricing", option.value)}
+              />
+              {option.label}
+            </FilterOption>
+          ))}
           <FilterLabel>Category</FilterLabel>
           {categories.map((category) => (
             <FilterOption key={category}>
               <input
+                disabled
                 type="radio"
                 name="category"
                 value={category}
@@ -477,32 +500,6 @@ export default function CategoryNavigation({
               {category}
             </FilterOption>
           ))}
-        </FilterSection>
-
-        <FilterSection>
-          <FilterLabel>Price Range</FilterLabel>
-          <FilterOption>
-            <input type="checkbox" /> Under $50
-          </FilterOption>
-          <FilterOption>
-            <input type="checkbox" /> $50 - $100
-          </FilterOption>
-          <FilterOption>
-            <input type="checkbox" /> $100 - $200
-          </FilterOption>
-          <FilterOption>
-            <input type="checkbox" /> Over $200
-          </FilterOption>
-        </FilterSection>
-
-        <FilterSection>
-          <FilterLabel>Availability</FilterLabel>
-          <FilterOption>
-            <input type="checkbox" /> In Stock
-          </FilterOption>
-          <FilterOption>
-            <input type="checkbox" /> Pre-order
-          </FilterOption>
         </FilterSection>
       </Drawer>
     </>

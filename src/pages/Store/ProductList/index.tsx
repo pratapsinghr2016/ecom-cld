@@ -9,14 +9,19 @@ import {
   useInfiniteScroll,
 } from "../../../hooks";
 import {
-  fetchFilteredProducts,
   fetchProducts,
   loadMoreProducts,
-  resetFilters,
-  setPriceRange,
-  setSelectedFilters,
   setSortBy,
 } from "../../../slices/productListSlice";
+
+interface ProductListProps {
+  selectedFilters: Record<string, string[]>;
+  onFilterChange: (filterId: string, value: string | number) => void;
+  onResetFilters: () => void;
+  hasActiveFilters: boolean;
+  priceRange: [number, number];
+  onPriceRangeChange: (range: [number, number]) => void;
+}
 
 // Styled Components
 const Container = styled.div`
@@ -81,7 +86,14 @@ const ProductGrid = styled.div`
   }
 `;
 
-const ProductList = () => {
+const ProductList: React.FC<ProductListProps> = ({
+  selectedFilters,
+  onFilterChange,
+  onResetFilters,
+  hasActiveFilters,
+  priceRange,
+  onPriceRangeChange,
+}) => {
   // Redux state
   const dispatch = useAppDispatch();
   const {
@@ -92,9 +104,7 @@ const ProductList = () => {
     hasMore,
     currentPage,
     sortBy,
-    priceRange,
   } = useAppSelector((state) => state.productList);
-  const { selectedFilters } = useAppSelector((state) => state.productList);
 
   // Use infinite scroll hook for better UX
   useInfiniteScroll({
@@ -115,35 +125,10 @@ const ProductList = () => {
     }
   }, [dispatch, products.length, loading]);
 
-  const handleFilterChange = (filterId: string, value: string | number) => {
-    console.log("Filter changed:", filterId, value);
-    dispatch(
-      fetchFilteredProducts({ ...selectedFilters, [filterId]: [String(value)] })
-    );
-    dispatch(
-      setSelectedFilters({
-        ...selectedFilters,
-        [filterId]: [String(value)],
-      })
-    );
-  };
-
-  const handleResetFilters = () => {
-    dispatch(resetFilters());
-    // Refetch original products after resetting filters
-    dispatch(fetchProducts());
-  };
-
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newSortBy = e.target.value;
     dispatch(setSortBy(newSortBy));
   };
-
-  const handlePriceRangeChange = (range: [number, number]) => {
-    dispatch(setPriceRange(range));
-  };
-
-  const hasActiveFilters = Object.keys(selectedFilters).length > 0;
 
   const handleCartClick = (productId: string) => {
     console.log("Add to cart clicked for product:", productId);
@@ -159,11 +144,11 @@ const ProductList = () => {
     <Container>
       <Filters
         selectedFilters={selectedFilters}
-        onFilterChange={handleFilterChange}
-        onResetFilters={handleResetFilters}
+        onFilterChange={onFilterChange}
+        onResetFilters={onResetFilters}
         hasActiveFilters={hasActiveFilters}
         priceRange={priceRange}
-        onPriceRangeChange={handlePriceRangeChange}
+        onPriceRangeChange={onPriceRangeChange}
       />
 
       <HeaderRow>

@@ -26,6 +26,7 @@ interface Filter {
 }
 
 interface FiltersProps {
+  outOfMenu?: boolean;
   selectedFilters: Record<string, string[]>;
   onFilterChange: (filterId: string, value: string | number) => void;
   onResetFilters: () => void;
@@ -162,6 +163,7 @@ const FilterWrapper = styled.div`
 `;
 
 const Filters: React.FC<FiltersProps> = ({
+  outOfMenu = false,
   selectedFilters,
   onFilterChange,
   onResetFilters,
@@ -246,6 +248,36 @@ const Filters: React.FC<FiltersProps> = ({
             )}
           </FilterWrapper>
         ))}
+        {outOfMenu && (
+          <PriceRangeContainer>
+            {buttonFilters.map((filter) => (
+              <FilterWrapper key={filter.id}>
+                {filter.options && (
+                  <div>
+                    {filter.label}
+                    {filter.options.map((option) => (
+                      <div key={option.value}>
+                        <input
+                          type="checkbox"
+                          checked={
+                            selectedFilters[filter.id]?.includes(
+                              String(option.value)
+                            ) || false
+                          }
+                          onChange={() =>
+                            onFilterChange(filter.id, option.value)
+                          }
+                        />
+                        {option.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </FilterWrapper>
+            ))}
+          </PriceRangeContainer>
+        )}
+
         <PriceRangeContainer>
           <PriceRangeSliderWrapper>
             <PriceRangeSlider
