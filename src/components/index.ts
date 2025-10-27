@@ -12,5 +12,5 @@ export { default as ProductItem } from "./molecules/ProductItem";
 export { default as ProductItemSkeleton } from "./molecules/ProductItemSkeleton";
 
 // Organism components exports
-export { default as Footer } from "./organisims/Footer";
-export { Navbar } from "./organisims/Navbar";
+export { default as Footer } from "./organism/Footer";
+export { Navbar } from "./organism/Navbar";

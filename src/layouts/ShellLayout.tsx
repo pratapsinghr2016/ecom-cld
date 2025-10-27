@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import styled from "styled-components";
-import Footer from "../components/organisims/Footer";
-import { Navbar } from "../components/organisims/Navbar";
+import Footer from "../components/organism/Footer";
+import { Navbar } from "../components/organism/Navbar";
 
 interface ShellLayoutProps {
   children: ReactNode;
