@@ -92,6 +92,29 @@ export const fetchSearchedItem = createAsyncThunk(
   }
 );
 
+// Helper function to sort products
+const sortProducts = (products: any[], sortBy: string): any[] => {
+  const sortedProducts = [...products];
+
+  switch (sortBy) {
+    case "price-low":
+      return sortedProducts.sort((a, b) => {
+        const priceA = Number.parseFloat(a.price) || 0;
+        const priceB = Number.parseFloat(b.price) || 0;
+        return priceA - priceB;
+      });
+    case "price-high":
+      return sortedProducts.sort((a, b) => {
+        const priceA = Number.parseFloat(a.price) || 0;
+        const priceB = Number.parseFloat(b.price) || 0;
+        return priceB - priceA;
+      });
+    case "featured":
+    default:
+      return sortedProducts; // Return as-is for featured (original order)
+  }
+};
+
 interface ProductListState {
   // products: DisplayProduct[];// Array of products
   products: any[];
@@ -102,6 +125,8 @@ interface ProductListState {
   currentPage: number;
   searchedItem: string;
   selectedFilters: Record<string, string[]>;
+  sortBy: string;
+  originalProducts: any[]; // Store original order for featured sorting
 }
 
 const initialState: ProductListState = {
@@ -113,6 +138,8 @@ const initialState: ProductListState = {
   currentPage: 1,
   selectedFilters: {},
   searchedItem: "",
+  sortBy: "featured",
+  originalProducts: [],
 };
 
 const productListSlice = createSlice({
@@ -147,6 +174,21 @@ const productListSlice = createSlice({
       state.currentPage = 1;
       state.hasMore = true;
       state.error = null;
+      state.sortBy = "featured";
+      state.originalProducts = [];
+    },
+    setSortBy: (state, action: PayloadAction<string>) => {
+      state.sortBy = action.payload;
+      if (action.payload === "featured") {
+        // For featured, restore original order if available
+        state.products =
+          state.originalProducts.length > 0
+            ? [...state.originalProducts]
+            : state.products;
+      } else {
+        // For other sorts, apply sorting to current products
+        state.products = sortProducts(state.products, action.payload);
+      }
     },
   },
   extraReducers: (builder) => {
@@ -158,7 +200,11 @@ const productListSlice = createSlice({
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.loading = false;
-        state.products = action.payload;
+        state.originalProducts = action.payload; // Store original order
+        state.products =
+          state.sortBy === "featured"
+            ? action.payload
+            : sortProducts(action.payload, state.sortBy);
         state.hasMore = action.payload.length > 0;
         state.currentPage = 1;
       })
@@ -173,7 +219,19 @@ const productListSlice = createSlice({
       })
       .addCase(loadMoreProducts.fulfilled, (state, action) => {
         state.loadingMore = false;
-        state.products = [...state.products, ...action.payload.products];
+        // Add new products to original order
+        state.originalProducts = [
+          ...state.originalProducts,
+          ...action.payload.products,
+        ];
+
+        // Apply sorting to the combined products
+        const allProducts = [...state.products, ...action.payload.products];
+        state.products =
+          state.sortBy === "featured"
+            ? allProducts
+            : sortProducts(allProducts, state.sortBy);
+
         state.currentPage = action.payload.page;
         // Set hasMore to false if no new products were returned
         state.hasMore = action.payload.products.length > 0;
@@ -189,7 +247,11 @@ const productListSlice = createSlice({
       })
       .addCase(fetchFilteredProducts.fulfilled, (state, action) => {
         state.loading = false;
-        state.products = action.payload.products;
+        state.originalProducts = action.payload.products; // Store original order for filtered results
+        state.products =
+          state.sortBy === "featured"
+            ? action.payload.products
+            : sortProducts(action.payload.products, state.sortBy);
         state.currentPage = action.payload.page || 1;
         state.hasMore = action.payload.products.length > 0;
       })
@@ -205,7 +267,11 @@ const productListSlice = createSlice({
       .addCase(fetchSearchedItem.fulfilled, (state, action) => {
         state.loading = false;
         console.log("Reducer - searched items:", action.payload);
-        state.products = action.payload.products;
+        state.originalProducts = action.payload.products; // Store original order for search results
+        state.products =
+          state.sortBy === "featured"
+            ? action.payload.products
+            : sortProducts(action.payload.products, state.sortBy);
         state.currentPage = action.payload.page || 1;
         state.hasMore = action.payload.products.length > 0;
       })
@@ -223,5 +289,6 @@ export const {
   setSelectedFilters,
   resetFilters,
   setSearchedItem,
+  setSortBy,
 } = productListSlice.actions;
 export default productListSlice.reducer;

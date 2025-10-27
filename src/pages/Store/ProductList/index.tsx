@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import styled from "styled-components";
 import Filters from "../../../components/molecules/Filters";
 import ProductItem from "../../../components/molecules/ProductItem";
@@ -13,6 +13,7 @@ import {
   loadMoreProducts,
   resetFilters,
   setSelectedFilters,
+  setSortBy,
 } from "../../../slices/productListSlice";
 
 // Styled Components
@@ -79,12 +80,17 @@ const ProductGrid = styled.div`
 `;
 
 const ProductList = () => {
-  const [sortBy, setSortBy] = useState("featured");
-
   // Redux state
   const dispatch = useAppDispatch();
-  const { products, loading, loadingMore, error, hasMore, currentPage } =
-    useAppSelector((state) => state.productList);
+  const {
+    products,
+    loading,
+    loadingMore,
+    error,
+    hasMore,
+    currentPage,
+    sortBy,
+  } = useAppSelector((state) => state.productList);
   const { selectedFilters } = useAppSelector((state) => state.productList);
 
   // Use infinite scroll hook for better UX
@@ -121,9 +127,13 @@ const ProductList = () => {
 
   const handleResetFilters = () => {
     dispatch(resetFilters());
-    setSortBy("featured");
     // Refetch original products after resetting filters
     dispatch(fetchProducts());
+  };
+
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newSortBy = e.target.value;
+    dispatch(setSortBy(newSortBy));
   };
 
   const hasActiveFilters = Object.keys(selectedFilters).length > 0;
@@ -164,10 +174,7 @@ const ProductList = () => {
             </span>
           )}
         </ItemCount>
-        <SortDropdown
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-        >
+        <SortDropdown value={sortBy} onChange={handleSortChange}>
           <option value="featured">Featured</option>
           {/* <option value="newest">Newest</option> */}
           <option value="price-low">Price: Low to High</option>
