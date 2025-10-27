@@ -1,5 +1,5 @@
 import React from "react";
-import CategoryNavigation from "../../components/CategoryNavigation";
+import CategoryNavigation from "../../components/organisims/CategoryNavigation";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import {
   fetchFilteredProducts,
